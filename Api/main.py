@@ -11,11 +11,11 @@ from pydantic import BaseModel
 
 from Api.rbac import a_permission
 from Api.consentement import consentement_valide
+from Api.dossiers import creer_dossier, lire_dossier
+from Api.audit import enregistrer_action
 
 
-# Chargement du fichier .env
 load_dotenv()
-
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEMO_EMAIL = os.getenv("DEMO_EMAIL")
@@ -23,11 +23,8 @@ DEMO_PASSWORD_HASH = os.getenv("DEMO_PASSWORD_HASH")
 TOTP_SECRET = os.getenv("TOTP_SECRET")
 
 ALGORITHM = "HS256"
-
-# Durée maximale d'un défi MFA : 5 minutes
 DUREE_CHALLENGE = 300
 
-# Stockage temporaire des défis MFA
 defis_mfa = {}
 
 
@@ -46,8 +43,6 @@ if not TOTP_SECRET:
 
 application = FastAPI(title="Telemed Secure API")
 
-
-# Gestion sécurisée des mots de passe
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
@@ -73,6 +68,11 @@ class MFARequest(BaseModel):
     code: str
 
 
+class DossierRequest(BaseModel):
+    patient_id: int
+    contenu: str
+
+
 @application.get("/")
 def accueil():
     return {
@@ -84,14 +84,12 @@ def accueil():
 @application.post("/login")
 def login(data: LoginRequest):
 
-    # Vérification de l'adresse email
     if data.username != DEMO_EMAIL:
         raise HTTPException(
             status_code=401,
             detail="Identifiants incorrects"
         )
 
-    # Vérification du mot de passe
     if not pwd_context.verify(
         data.password,
         DEMO_PASSWORD_HASH
@@ -101,7 +99,6 @@ def login(data: LoginRequest):
             detail="Identifiants incorrects"
         )
 
-    # Création d'un défi temporaire MFA
     mfa_challenge = secrets.token_urlsafe(32)
 
     defis_mfa[mfa_challenge] = {
@@ -119,7 +116,6 @@ def login(data: LoginRequest):
 @application.post("/mfa/authenticator")
 def verifier_authenticator(data: MFARequest):
 
-    # Vérification du défi MFA
     defi = defis_mfa.get(data.mfa_challenge)
 
     if not defi:
@@ -128,7 +124,6 @@ def verifier_authenticator(data: MFARequest):
             detail="Session MFA invalide ou expirée"
         )
 
-    # Vérification de l'expiration
     if time.time() - defi["date_creation"] > DUREE_CHALLENGE:
         del defis_mfa[data.mfa_challenge]
 
@@ -137,7 +132,6 @@ def verifier_authenticator(data: MFARequest):
             detail="Session MFA expirée"
         )
 
-    # Vérification du code Authenticator
     totp = pyotp.TOTP(TOTP_SECRET)
 
     if not totp.verify(data.code):
@@ -146,7 +140,6 @@ def verifier_authenticator(data: MFARequest):
             detail="Code Authenticator incorrect ou expiré"
         )
 
-    # Création du JWT uniquement après la deuxième étape
     token = jwt.encode(
         {
             "sub": DEMO_EMAIL,
@@ -156,7 +149,6 @@ def verifier_authenticator(data: MFARequest):
         algorithm=ALGORITHM
     )
 
-    # Suppression du défi MFA après utilisation
     del defis_mfa[data.mfa_challenge]
 
     return {
@@ -202,8 +194,8 @@ def acces_medecin_admin():
 
 @application.post("/consentement/{patient_id}/{medecin_id}")
 def donner_consentement_route(
-    patient_id: str,
-    medecin_id: str
+    patient_id: int,
+    medecin_id: int
 ):
 
     from Api.consentement import donner_consentement
@@ -216,8 +208,8 @@ def donner_consentement_route(
 
 @application.get("/consentement/{patient_id}/{medecin_id}")
 def verifier_consentement_route(
-    patient_id: str,
-    medecin_id: str
+    patient_id: int,
+    medecin_id: int
 ):
 
     consentement = consentement_valide(
@@ -234,8 +226,8 @@ def verifier_consentement_route(
 
 @application.delete("/consentement/{patient_id}/{medecin_id}")
 def retirer_consentement_route(
-    patient_id: str,
-    medecin_id: str
+    patient_id: int,
+    medecin_id: int
 ):
 
     from Api.consentement import retirer_consentement
@@ -248,19 +240,17 @@ def retirer_consentement_route(
 
 @application.get("/dossiers/{patient_id}/{medecin_id}")
 def acces_dossier(
-    patient_id: str,
-    medecin_id: str
+    patient_id: int,
+    medecin_id: int
 ):
 
     role = "medecin"
 
-    # Vérification du rôle
     verifier_role(
         role,
         "voir_dossiers"
     )
 
-    # Vérification du consentement
     if not consentement_valide(
         patient_id,
         medecin_id
@@ -270,8 +260,42 @@ def acces_dossier(
             detail="Accès refusé : consentement du patient absent"
         )
 
+    try:
+        contenu = lire_dossier(
+            patient_id=patient_id,
+            dossier_id=3,
+            utilisateur_id=medecin_id,
+            adresse_ip="127.0.0.1"
+        )
+    except ValueError as erreur:
+        raise HTTPException(
+            status_code=404,
+            detail=str(erreur)
+        )
+
     return {
         "message": "Accès au dossier autorisé",
         "patient_id": patient_id,
-        "medecin_id": medecin_id
+        "medecin_id": medecin_id,
+        "contenu": contenu
     }
+
+
+@application.post("/dossiers")
+def creer_dossier_route(data: DossierRequest):
+
+    utilisateur_id = 2
+
+    resultat = creer_dossier(
+        patient_id=data.patient_id,
+        contenu=data.contenu
+    )
+
+    enregistrer_action(
+        utilisateur_id=utilisateur_id,
+        action="CREATION_DOSSIER",
+        ressource=f"dossier_{resultat['id']}",
+        adresse_ip="127.0.0.1"
+    )
+
+    return resultat
