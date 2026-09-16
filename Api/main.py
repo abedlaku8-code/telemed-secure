@@ -10,6 +10,9 @@ from pydantic import BaseModel
 from Api.rbac import a_permission
 from Api.consentement import consentement_valide
 
+from Api.dossiers import creer_dossier, lire_dossier
+from Api.audit import enregistrer_action
+
 
 # Chargement du fichier .env
 load_dotenv()
@@ -101,6 +104,13 @@ def login(data: LoginRequest):
         algorithm=ALGORITHM
     )
 
+    return {
+    "message": "Authentification réussie",
+    "acces": "autorisé",
+    "access_token": token,
+    "token_type": "bearer"
+}
+
 @application.get("/admin")
 def espace_admin():
     role = "admin"
@@ -150,29 +160,55 @@ def retirer_consentement_route(patient_id: str, medecin_id: str):
     return retirer_consentement(patient_id, medecin_id)
 
 @application.get("/dossiers/{patient_id}/{medecin_id}")
-def acces_dossier(patient_id: str, medecin_id: str):
-
+def acces_dossier(patient_id: int, medecin_id: int):
     role = "medecin"
 
-    # Vérification du rôle
     verifier_role(role, "voir_dossiers")
 
-    # Vérification du consentement
     if not consentement_valide(patient_id, medecin_id):
         raise HTTPException(
             status_code=403,
             detail="Accès refusé : consentement du patient absent"
         )
 
+    try:
+        contenu = lire_dossier(
+            patient_id=patient_id,
+            dossier_id=3,
+            utilisateur_id=medecin_id,
+            adresse_ip="127.0.0.1"
+        )
+    except ValueError as erreur:
+        raise HTTPException(
+            status_code=404,
+            detail=str(erreur)
+        )
+
     return {
         "message": "Accès au dossier autorisé",
         "patient_id": patient_id,
-        "medecin_id": medecin_id
+        "medecin_id": medecin_id,
+        "contenu": contenu
     }
 
-    return {
-        "message": "Authentification réussie",
-        "acces": "autorisé",
-        "access_token": token,
-        "token_type": "bearer"
-    }
+class DossierRequest(BaseModel):
+    patient_id: int
+    contenu: str
+
+@application.post("/dossiers")
+def creer_dossier_route(data: DossierRequest):
+    utilisateur_id = 2
+
+    resultat = creer_dossier(
+        patient_id=data.patient_id,
+        contenu=data.contenu
+    )
+
+    enregistrer_action(
+        utilisateur_id=utilisateur_id,
+        action="CREATION_DOSSIER",
+        ressource=f"dossier_{resultat['id']}",
+        adresse_ip="127.0.0.1"
+    )
+
+    return resultat
