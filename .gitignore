@@ -5,3 +5,4 @@ node_modules/
 Api/venv/
 __pycache__/
 *.pyc
+totp_qr.png
