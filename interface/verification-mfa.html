@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification MFA - Telemed Secure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Telemed Secure</h1>
+        <p>Vérification de sécurité</p>
+    </header>
+
+    <main>
+        <h2>Vérification MFA</h2>
+
+        <p>
+            Une deuxième vérification est nécessaire
+            pour accéder à votre compte.
+        </p>
+
+        <section class="carte">
+            <h3>🔐 Authenticator</h3>
+
+            <p>
+                Utilisez le code généré par votre application
+                d'authentification.
+            </p>
+
+            <input
+                type="text"
+                id="code-authenticator"
+                maxlength="6"
+                inputmode="numeric"
+                placeholder="Code à 6 chiffres"
+            >
+
+            <button id="bouton-authenticator">
+                Vérifier avec Authenticator
+            </button>
+        </section>
+
+        <section class="carte">
+            <h3>📧 Code par e-mail</h3>
+
+            <p>
+                Recevez un code de vérification temporaire
+                à votre adresse e-mail.
+            </p>
+
+            <button id="bouton-email">
+                Recevoir le code par e-mail
+            </button>
+
+            <div id="zone-code-email" style="display: none;">
+
+                <label for="code-email">
+                    Code reçu par e-mail
+                </label>
+
+                <input
+                    type="text"
+                    id="code-email"
+                    maxlength="6"
+                    inputmode="numeric"
+                    placeholder="Code à 6 chiffres"
+                >
+
+                <button id="bouton-verifier-email">
+                    Vérifier le code
+                </button>
+
+            </div>
+        </section>
+
+        <p id="message-mfa"></p>
+
+    </main>
+
+    <script src="verification-mfa.js"></script>
+
+</body>
+</html>
