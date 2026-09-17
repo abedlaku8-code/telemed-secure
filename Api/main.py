@@ -14,7 +14,11 @@ from pydantic import BaseModel
 from Api.database import get_connection
 from Api.rbac import a_permission
 from Api.consentement import consentement_valide
-from Api.dossiers import creer_dossier, lire_dossier
+from Api.dossiers import (
+    creer_dossier,
+    lire_dossier,
+    lire_dossier_specialiste
+)
 from Api.audit import enregistrer_action
 
 
@@ -57,6 +61,7 @@ pwd_context = CryptContext(
 
 def verifier_role(role: str, permission: str):
     """Vérifie qu'un rôle possède une permission."""
+
     if not a_permission(role, permission):
         raise HTTPException(
             status_code=403,
@@ -68,6 +73,7 @@ def obtenir_utilisateur_token(
     credentials: HTTPAuthorizationCredentials = Depends(securite)
 ):
     """Vérifie le JWT et récupère l'identité et le rôle depuis PostgreSQL."""
+
     token = credentials.credentials
 
     try:
@@ -95,6 +101,7 @@ def obtenir_utilisateur_token(
                     """,
                     (email,)
                 )
+
                 utilisateur = cur.fetchone()
 
         if not utilisateur:
@@ -127,27 +134,38 @@ def obtenir_utilisateur_token(
         )
 
 
+# ============================================================
+# MODELES
+# ============================================================
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 class UtilisateurRequest(BaseModel):
     email: str
     password: str
     role: str
 
+
 class MFARequest(BaseModel):
     mfa_challenge: str
     code: str
 
-
 class DossierRequest(BaseModel):
     patient_id: int
     contenu: str
+    motif: str | None = None
+    antecedents: str | None = None
+    allergies: str | None = None
+    traitements: str | None = None
+    observations: str | None = None
 
 class DemandeMedecinRequest(BaseModel):
     medecin_id: int
     message: str | None = None
+
 
 class ReponseDemandeMedecinRequest(BaseModel):
     demande_id: int
@@ -155,12 +173,33 @@ class ReponseDemandeMedecinRequest(BaseModel):
     date_rendez_vous: str | None = None
     heure_rendez_vous: str | None = None
 
+
+class ReponseRecommandationSpecialisteRequest(BaseModel):
+    recommandation_id: int
+    decision: str
+
+
+class RecommandationSpecialisteRequest(BaseModel):
+    patient_id: int
+    specialiste_id: int
+    message: str | None = None
+
+
+# ============================================================
+# ACCUEIL
+# ============================================================
+
 @application.get("/")
 def accueil():
     return {
         "message": "API Telemed Secure",
         "statut": "API opérationnelle"
     }
+
+
+# ============================================================
+# CREATION UTILISATEUR
+# ============================================================
 
 @application.post("/utilisateurs")
 def creer_utilisateur(data: UtilisateurRequest):
@@ -216,7 +255,11 @@ def creer_utilisateur(data: UtilisateurRequest):
                     (%s, %s, %s, TRUE)
                 RETURNING id, email, role, actif
                 """,
-                (email, password_hash, role)
+                (
+                    email,
+                    password_hash,
+                    role
+                )
             )
 
             utilisateur = cur.fetchone()
@@ -228,6 +271,11 @@ def creer_utilisateur(data: UtilisateurRequest):
         "role": utilisateur[2],
         "actif": utilisateur[3]
     }
+
+
+# ============================================================
+# CONNEXION
+# ============================================================
 
 @application.post("/login")
 def login(data: LoginRequest):
@@ -244,6 +292,7 @@ def login(data: LoginRequest):
                 """,
                 (email,)
             )
+
             utilisateur = cur.fetchone()
 
     if not utilisateur:
@@ -252,7 +301,13 @@ def login(data: LoginRequest):
             detail="Identifiants incorrects"
         )
 
-    utilisateur_id, email_db, password_hash, role, actif = utilisateur
+    (
+        utilisateur_id,
+        email_db,
+        password_hash,
+        role,
+        actif
+    ) = utilisateur
 
     if not actif:
         raise HTTPException(
@@ -285,6 +340,10 @@ def login(data: LoginRequest):
     }
 
 
+# ============================================================
+# MFA
+# ============================================================
+
 @application.post("/mfa/authenticator")
 def verifier_authenticator(data: MFARequest):
 
@@ -297,6 +356,7 @@ def verifier_authenticator(data: MFARequest):
         )
 
     if time.time() - defi["date_creation"] > DUREE_CHALLENGE:
+
         del defis_mfa[data.mfa_challenge]
 
         raise HTTPException(
@@ -322,6 +382,7 @@ def verifier_authenticator(data: MFARequest):
                 """,
                 (defi["email"],)
             )
+
             utilisateur = cur.fetchone()
 
     if not utilisateur:
@@ -330,7 +391,12 @@ def verifier_authenticator(data: MFARequest):
             detail="Utilisateur non autorisé"
         )
 
-    utilisateur_id, email, role, actif = utilisateur
+    (
+        utilisateur_id,
+        email,
+        role,
+        actif
+    ) = utilisateur
 
     if not actif:
         raise HTTPException(
@@ -338,7 +404,9 @@ def verifier_authenticator(data: MFARequest):
             detail="Compte désactivé"
         )
 
-    date_expiration = datetime.now(timezone.utc) + timedelta(hours=1)
+    date_expiration = datetime.now(
+        timezone.utc
+    ) + timedelta(hours=1)
 
     token = jwt.encode(
         {
@@ -359,6 +427,10 @@ def verifier_authenticator(data: MFARequest):
         "token_type": "bearer"
     }
 
+
+# ============================================================
+# ADMIN
+# ============================================================
 
 @application.get("/admin")
 def espace_admin(
@@ -396,12 +468,21 @@ def acces_medecin_admin(
         "role": role
     }
 
+
+# ============================================================
+# DEMANDE DE MEDECIN PRINCIPAL
+# ============================================================
+
 @application.post("/demandes-medecin")
 def creer_demande_medecin(
     data: DemandeMedecinRequest,
     utilisateur=Depends(obtenir_utilisateur_token)
 ):
-    verifier_role(utilisateur["role"], "voir_ses_donnees")
+
+    verifier_role(
+        utilisateur["role"],
+        "voir_ses_donnees"
+    )
 
     patient_id = utilisateur["id"]
     medecin_id = data.medecin_id
@@ -419,6 +500,7 @@ def creer_demande_medecin(
                 """,
                 (medecin_id,)
             )
+
             medecin = cur.fetchone()
 
             if not medecin:
@@ -435,7 +517,10 @@ def creer_demande_medecin(
                   AND medecin_id = %s
                   AND statut = 'EN_ATTENTE'
                 """,
-                (patient_id, medecin_id)
+                (
+                    patient_id,
+                    medecin_id
+                )
             )
 
             demande_existante = cur.fetchone()
@@ -449,29 +534,47 @@ def creer_demande_medecin(
             cur.execute(
                 """
                 INSERT INTO demandes_medecin
-                    (patient_id, medecin_id, type_demande, origine, statut, message)
+                    (
+                        patient_id,
+                        medecin_id,
+                        type_demande,
+                        origine,
+                        statut,
+                        message
+                    )
                 VALUES
-                    (%s, %s, 'principal', 'patient', 'EN_ATTENTE', %s)
+                    (
+                        %s,
+                        %s,
+                        'principal',
+                        'patient',
+                        'EN_ATTENTE',
+                        %s
+                    )
                 RETURNING id, date_demande
                 """,
-                (patient_id, medecin_id, data.message)
+                (
+                    patient_id,
+                    medecin_id,
+                    data.message
+                )
             )
 
             demande = cur.fetchone()
 
             cur.execute(
-    """
-    INSERT INTO notifications
-        (utilisateur_id, type, message)
-    VALUES
-        (%s, %s, %s)
-    """,
-    (
-        medecin_id,
-        "DEMANDE_MEDECIN",
-        "Un patient souhaite vous choisir comme médecin principal."
-    )
-)
+                """
+                INSERT INTO notifications
+                    (utilisateur_id, type, message)
+                VALUES
+                    (%s, %s, %s)
+                """,
+                (
+                    medecin_id,
+                    "DEMANDE_MEDECIN",
+                    "Un patient souhaite vous choisir comme médecin principal."
+                )
+            )
 
     enregistrer_action(
         utilisateur_id=patient_id,
@@ -489,28 +592,38 @@ def creer_demande_medecin(
         "date_demande": demande[1]
     }
 
+
+# ============================================================
+# REPONSE DEMANDE MEDECIN
+# ============================================================
+
 @application.post("/demandes-medecin/repondre")
 def repondre_demande_medecin(
     demande: ReponseDemandeMedecinRequest,
     utilisateur=Depends(obtenir_utilisateur_token)
 ):
-    # Seul un médecin peut répondre à une demande
+
     if utilisateur["role"] != "medecin":
         raise HTTPException(
             status_code=403,
             detail="Accès réservé aux médecins"
         )
 
-    # Vérification de la décision
-    if demande.decision not in {"ACCEPTEE", "REFUSEE"}:
+    if demande.decision not in {
+        "ACCEPTEE",
+        "REFUSEE"
+    }:
         raise HTTPException(
             status_code=400,
             detail="La décision doit être ACCEPTEE ou REFUSEE"
         )
 
-    # Si le médecin accepte, la date et l'heure du rendez-vous sont obligatoires
     if demande.decision == "ACCEPTEE":
-        if not demande.date_rendez_vous or not demande.heure_rendez_vous:
+
+        if (
+            not demande.date_rendez_vous
+            or not demande.heure_rendez_vous
+        ):
             raise HTTPException(
                 status_code=400,
                 detail="La date et l'heure du rendez-vous sont obligatoires"
@@ -519,7 +632,6 @@ def repondre_demande_medecin(
     with get_connection() as conn:
         with conn.cursor() as cur:
 
-            # Vérifier que la demande appartient bien à ce médecin
             cur.execute(
                 """
                 SELECT patient_id, medecin_id, statut
@@ -537,7 +649,11 @@ def repondre_demande_medecin(
                     detail="Demande introuvable"
                 )
 
-            patient_id, medecin_id, statut = demande_existante
+            (
+                patient_id,
+                medecin_id,
+                statut
+            ) = demande_existante
 
             if medecin_id != utilisateur["id"]:
                 raise HTTPException(
@@ -551,7 +667,10 @@ def repondre_demande_medecin(
                     detail="Cette demande a déjà été traitée"
                 )
 
-            # Refus
+            # ------------------------------------------------
+            # REFUS
+            # ------------------------------------------------
+
             if demande.decision == "REFUSEE":
 
                 cur.execute(
@@ -567,10 +686,17 @@ def repondre_demande_medecin(
                 cur.execute(
                     """
                     INSERT INTO notifications
-                        (utilisateur_id, type, message)
+                        (
+                            utilisateur_id,
+                            type,
+                            message
+                        )
                     VALUES
-                        (%s, 'REPONSE_MEDECIN',
-                         'Votre demande de médecin principal a été refusée.')
+                        (
+                            %s,
+                            'REPONSE_MEDECIN',
+                            'Votre demande de médecin principal a été refusée.'
+                        )
                     """,
                     (patient_id,)
                 )
@@ -589,8 +715,10 @@ def repondre_demande_medecin(
                     "statut": "REFUSEE"
                 }
 
-            # Acceptation : vérifier qu'il n'existe pas déjà
-            # un médecin principal actif pour ce patient
+            # ------------------------------------------------
+            # ACCEPTATION
+            # ------------------------------------------------
+
             cur.execute(
                 """
                 SELECT id, medecin_id
@@ -610,7 +738,6 @@ def repondre_demande_medecin(
                     detail="Le patient possède déjà un médecin principal actif"
                 )
 
-            # Enregistrer la date et l'heure du rendez-vous
             cur.execute(
                 """
                 UPDATE demandes_medecin
@@ -627,22 +754,37 @@ def repondre_demande_medecin(
                 )
             )
 
-            # Créer la relation patient-médecin principale
             cur.execute(
                 """
                 INSERT INTO relations_patient_medecin
-                    (patient_id, medecin_id, type_relation, actif)
+                    (
+                        patient_id,
+                        medecin_id,
+                        type_relation,
+                        actif
+                    )
                 VALUES
-                    (%s, %s, 'principal', TRUE)
+                    (
+                        %s,
+                        %s,
+                        'principal',
+                        TRUE
+                    )
                 """,
-                (patient_id, utilisateur["id"])
+                (
+                    patient_id,
+                    utilisateur["id"]
+                )
             )
 
-            # Notification du patient avec le rendez-vous
             cur.execute(
                 """
                 INSERT INTO notifications
-                    (utilisateur_id, type, message)
+                    (
+                        utilisateur_id,
+                        type,
+                        message
+                    )
                 VALUES
                     (
                         %s,
@@ -674,12 +816,465 @@ def repondre_demande_medecin(
         "heure_rendez_vous": demande.heure_rendez_vous
     }
 
+
+# ============================================================
+# RECOMMANDATION SPECIALISTE
+# ============================================================
+
+@application.post("/recommandations-specialiste")
+def recommander_specialiste(
+    demande: RecommandationSpecialisteRequest,
+    utilisateur=Depends(obtenir_utilisateur_token)
+):
+
+    if utilisateur["role"] != "medecin":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux médecins"
+        )
+
+    medecin_principal_id = utilisateur["id"]
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT patient_id
+                FROM relations_patient_medecin
+                WHERE patient_id = %s
+                  AND medecin_id = %s
+                  AND type_relation = 'principal'
+                  AND actif = TRUE
+                """,
+                (
+                    demande.patient_id,
+                    medecin_principal_id
+                )
+            )
+
+            relation = cur.fetchone()
+
+            if not relation:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Ce médecin n'est pas le médecin principal de ce patient"
+                )
+
+            patient_id = demande.patient_id
+
+            cur.execute(
+                """
+                SELECT id, email, role, actif
+                FROM utilisateurs
+                WHERE id = %s
+                """,
+                (demande.specialiste_id,)
+            )
+
+            specialiste = cur.fetchone()
+
+            if not specialiste:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Spécialiste introuvable"
+                )
+
+            if (
+                specialiste[2] != "medecin"
+                or not specialiste[3]
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="L'utilisateur sélectionné n'est pas un médecin actif"
+                )
+
+            if specialiste[0] == medecin_principal_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Le médecin principal ne peut pas se recommander lui-même"
+                )
+
+            cur.execute(
+                """
+                SELECT id
+                FROM recommandations_specialiste
+                WHERE patient_id = %s
+                  AND medecin_principal_id = %s
+                  AND specialiste_id = %s
+                  AND statut = 'EN_ATTENTE'
+                """,
+                (
+                    patient_id,
+                    medecin_principal_id,
+                    demande.specialiste_id
+                )
+            )
+
+            if cur.fetchone():
+                raise HTTPException(
+                    status_code=409,
+                    detail="Une recommandation est déjà en attente"
+                )
+
+            cur.execute(
+                """
+                INSERT INTO recommandations_specialiste
+                (
+                    patient_id,
+                    medecin_principal_id,
+                    specialiste_id,
+                    message,
+                    statut
+                )
+                VALUES
+                    (%s, %s, %s, %s, 'EN_ATTENTE')
+                RETURNING id, date_recommandation
+                """,
+                (
+                    patient_id,
+                    medecin_principal_id,
+                    demande.specialiste_id,
+                    demande.message
+                )
+            )
+
+            recommandation = cur.fetchone()
+
+            cur.execute(
+                """
+                INSERT INTO notifications
+                (
+                    utilisateur_id,
+                    type,
+                    message
+                )
+                VALUES
+                    (%s, %s, %s)
+                """,
+                (
+                    patient_id,
+                    "RECOMMANDATION_SPECIALISTE",
+                    f"Votre médecin principal vous recommande le spécialiste {specialiste[1]}."
+                )
+            )
+
+            enregistrer_action(
+                medecin_principal_id,
+                "RECOMMANDATION_SPECIALISTE_CREEE",
+                f"recommandation:{recommandation[0]}"
+            )
+
+        conn.commit()
+
+    return {
+        "message": "Recommandation du spécialiste créée",
+        "recommandation_id": recommandation[0],
+        "patient_id": patient_id,
+        "medecin_principal_id": medecin_principal_id,
+        "specialiste_id": demande.specialiste_id,
+        "statut": "EN_ATTENTE",
+        "date_recommandation": recommandation[1]
+    }
+
+
+# ============================================================
+# REPONSE RECOMMANDATION SPECIALISTE
+# ============================================================
+
+@application.post("/recommandations-specialiste/repondre")
+def repondre_recommandation_specialiste(
+    demande: ReponseRecommandationSpecialisteRequest,
+    utilisateur=Depends(obtenir_utilisateur_token)
+):
+
+    if utilisateur["role"] != "patient":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux patients"
+        )
+
+    decision = demande.decision.upper()
+
+    if decision not in {
+        "ACCEPTEE",
+        "REFUSEE"
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="Décision invalide"
+        )
+
+    patient_id = utilisateur["id"]
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    patient_id,
+                    medecin_principal_id,
+                    specialiste_id,
+                    statut
+                FROM recommandations_specialiste
+                WHERE id = %s
+                """,
+                (demande.recommandation_id,)
+            )
+
+            recommandation = cur.fetchone()
+
+            if not recommandation:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Recommandation introuvable"
+                )
+
+            (
+                recommandation_id,
+                patient_recommandation_id,
+                medecin_principal_id,
+                specialiste_id,
+                statut
+            ) = recommandation
+
+            if patient_recommandation_id != patient_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Cette recommandation ne vous appartient pas"
+                )
+
+            if statut != "EN_ATTENTE":
+                raise HTTPException(
+                    status_code=409,
+                    detail="Cette recommandation a déjà reçu une réponse"
+                )
+
+            # ------------------------------------------------
+            # ACCEPTATION
+            # ------------------------------------------------
+
+            if decision == "ACCEPTEE":
+
+                cur.execute(
+                    """
+                    SELECT id
+                    FROM relations_patient_medecin
+                    WHERE patient_id = %s
+                      AND medecin_id = %s
+                      AND type_relation = 'specialiste'
+                      AND actif = TRUE
+                    """,
+                    (
+                        patient_id,
+                        specialiste_id
+                    )
+                )
+
+                relation_existante = cur.fetchone()
+
+                if not relation_existante:
+
+                    cur.execute(
+                        """
+                        INSERT INTO relations_patient_medecin
+                        (
+                            patient_id,
+                            medecin_id,
+                            type_relation,
+                            actif
+                        )
+                        VALUES
+                        (
+                            %s,
+                            %s,
+                            'specialiste',
+                            TRUE
+                        )
+                        """,
+                        (
+                            patient_id,
+                            specialiste_id
+                        )
+                    )
+
+                cur.execute(
+                    """
+                    UPDATE recommandations_specialiste
+                    SET statut = 'ACCEPTEE',
+                        date_reponse = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                    """,
+                    (recommandation_id,)
+                )
+
+                cur.execute(
+                    """
+                    INSERT INTO notifications
+                    (
+                        utilisateur_id,
+                        type,
+                        message
+                    )
+                    VALUES
+                    (%s, %s, %s)
+                    """,
+                    (
+                        specialiste_id,
+                        "RECOMMANDATION_SPECIALISTE_ACCEPTEE",
+                        "Le patient a accepté la recommandation du spécialiste."
+                    )
+                )
+
+                enregistrer_action(
+                    patient_id,
+                    "RECOMMANDATION_SPECIALISTE_ACCEPTEE",
+                    f"recommandation:{recommandation_id}"
+                )
+
+                message = "Recommandation du spécialiste acceptée"
+
+            # ------------------------------------------------
+            # REFUS
+            # ------------------------------------------------
+
+            else:
+
+                cur.execute(
+                    """
+                    UPDATE recommandations_specialiste
+                    SET statut = 'REFUSEE',
+                        date_reponse = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                    """,
+                    (recommandation_id,)
+                )
+
+                cur.execute(
+                    """
+                    INSERT INTO notifications
+                    (
+                        utilisateur_id,
+                        type,
+                        message
+                    )
+                    VALUES
+                    (%s, %s, %s)
+                    """,
+                    (
+                        medecin_principal_id,
+                        "RECOMMANDATION_SPECIALISTE_REFUSEE",
+                        "Le patient a refusé la recommandation du spécialiste."
+                    )
+                )
+
+                enregistrer_action(
+                    patient_id,
+                    "RECOMMANDATION_SPECIALISTE_REFUSEE",
+                    f"recommandation:{recommandation_id}"
+                )
+
+                message = "Recommandation du spécialiste refusée"
+
+            conn.commit()
+
+    return {
+        "message": message,
+        "recommandation_id": recommandation_id,
+        "patient_id": patient_id,
+        "specialiste_id": specialiste_id,
+        "statut": decision
+    }
+
+
+# ============================================================
+# MEDECIN PRINCIPAL
+# ============================================================
+
+@application.get("/medecin-principal")
+def obtenir_medecin_principal(
+    utilisateur=Depends(obtenir_utilisateur_token)
+):
+
+    if utilisateur["role"] != "patient":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux patients"
+        )
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT
+                    r.id,
+                    r.medecin_id,
+                    u.email,
+                    r.type_relation,
+                    r.actif,
+                    r.date_debut,
+                    r.date_fin,
+                    d.date_rendez_vous,
+                    d.heure_rendez_vous
+                FROM relations_patient_medecin r
+                JOIN utilisateurs u
+                    ON u.id = r.medecin_id
+                LEFT JOIN demandes_medecin d
+                    ON d.patient_id = r.patient_id
+                   AND d.medecin_id = r.medecin_id
+                   AND d.type_demande = 'principal'
+                   AND d.statut = 'ACCEPTEE'
+                WHERE r.patient_id = %s
+                  AND r.type_relation = 'principal'
+                  AND r.actif = TRUE
+                ORDER BY d.date_reponse DESC NULLS LAST
+                LIMIT 1
+                """,
+                (utilisateur["id"],)
+            )
+
+            relation = cur.fetchone()
+
+    if not relation:
+        return {
+            "patient_id": utilisateur["id"],
+            "medecin_principal": None,
+            "rendez_vous": None
+        }
+
+    return {
+        "patient_id": utilisateur["id"],
+        "medecin_principal": {
+            "relation_id": relation[0],
+            "medecin_id": relation[1],
+            "medecin_email": relation[2],
+            "type_relation": relation[3],
+            "actif": relation[4],
+            "date_debut": relation[5],
+            "date_fin": relation[6]
+        },
+        "rendez_vous": {
+            "date": relation[7],
+            "heure": relation[8]
+        } if relation[7] and relation[8] else None
+    }
+
+
+# ============================================================
+# NOTIFICATIONS
+# ============================================================
+
 @application.get("/notifications")
 def obtenir_notifications(
     utilisateur=Depends(obtenir_utilisateur_token)
 ):
+
     with get_connection() as conn:
         with conn.cursor() as cur:
+
             cur.execute(
                 """
                 SELECT id, type, message, lue, date_creation
@@ -706,11 +1301,16 @@ def obtenir_notifications(
         ]
     }
 
+
+# ============================================================
+# DEMANDES MEDECIN
+# ============================================================
+
 @application.get("/demandes-medecin")
 def obtenir_demandes_medecin(
     utilisateur=Depends(obtenir_utilisateur_token)
 ):
-    # Seul un médecin peut consulter les demandes qui lui sont adressées
+
     if utilisateur["role"] != "medecin":
         raise HTTPException(
             status_code=403,
@@ -719,6 +1319,7 @@ def obtenir_demandes_medecin(
 
     with get_connection() as conn:
         with conn.cursor() as cur:
+
             cur.execute(
                 """
                 SELECT
@@ -732,7 +1333,8 @@ def obtenir_demandes_medecin(
                     d.date_demande,
                     d.date_reponse
                 FROM demandes_medecin d
-                JOIN utilisateurs u ON u.id = d.patient_id
+                JOIN utilisateurs u
+                    ON u.id = d.patient_id
                 WHERE d.medecin_id = %s
                 ORDER BY d.date_demande DESC
                 """,
@@ -758,6 +1360,11 @@ def obtenir_demandes_medecin(
             for demande in demandes
         ]
     }
+
+
+# ============================================================
+# CONSENTEMENT
+# ============================================================
 
 @application.post("/consentement/{patient_id}/{medecin_id}")
 def donner_consentement_route(
@@ -805,6 +1412,10 @@ def retirer_consentement_route(
     )
 
 
+# ============================================================
+# ACCES DOSSIER MEDICAL
+# ============================================================
+
 @application.get("/dossiers/{patient_id}/{medecin_id}/{dossier_id}")
 def acces_dossier(
     patient_id: int,
@@ -814,52 +1425,218 @@ def acces_dossier(
 ):
 
     role = utilisateur["role"]
+    utilisateur_id = utilisateur["id"]
+
+    # --------------------------------------------------------
+    # CAS DU PATIENT
+    # --------------------------------------------------------
+
+    if role == "patient":
+
+        if utilisateur_id != patient_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Accès refusé"
+            )
+
+        try:
+
+            contenu = lire_dossier(
+                patient_id=patient_id,
+                dossier_id=dossier_id,
+                utilisateur_id=utilisateur_id,
+                adresse_ip="127.0.0.1"
+            )
+
+        except ValueError as erreur:
+
+            raise HTTPException(
+                status_code=404,
+                detail=str(erreur)
+            )
+
+        return {
+            "message": "Accès au dossier autorisé",
+            "patient_id": patient_id,
+            "medecin_id": medecin_id,
+            "dossier_id": dossier_id,
+            "contenu": contenu
+        }
+
+    # --------------------------------------------------------
+    # CAS DU MEDECIN
+    # --------------------------------------------------------
+
+    elif role == "medecin":
+
+        # Le médecin connecté doit correspondre au médecin
+        # indiqué dans l'URL.
+        if utilisateur_id != medecin_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Accès refusé"
+            )
+
+        verifier_role(
+            role,
+            "voir_dossiers"
+        )
+
+        # Vérifier la relation active avec le patient.
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+
+                cur.execute(
+                    """
+                    SELECT type_relation
+                    FROM relations_patient_medecin
+                    WHERE patient_id = %s
+                      AND medecin_id = %s
+                      AND actif = TRUE
+                    """,
+                    (
+                        patient_id,
+                        utilisateur_id
+                    )
+                )
+
+                relation_detail = cur.fetchone()
+
+        if not relation_detail:
+            raise HTTPException(
+                status_code=403,
+                detail="Accès refusé : aucune relation médicale active"
+            )
+
+        type_relation = relation_detail[0]
+
+        # Le consentement reste obligatoire.
+        if not consentement_valide(
+            patient_id,
+            utilisateur_id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Accès refusé : consentement du patient absent"
+            )
+
+        try:
+
+            # ------------------------------------------------
+            # SPECIALISTE
+            # ------------------------------------------------
+
+            if type_relation == "specialiste":
+
+                contenu = lire_dossier_specialiste(
+                    patient_id=patient_id,
+                    dossier_id=dossier_id,
+                    utilisateur_id=utilisateur_id,
+                    adresse_ip="127.0.0.1"
+                )
+
+            # ------------------------------------------------
+            # MEDECIN PRINCIPAL
+            # ------------------------------------------------
+
+            else:
+
+                contenu = lire_dossier(
+                    patient_id=patient_id,
+                    dossier_id=dossier_id,
+                    utilisateur_id=utilisateur_id,
+                    adresse_ip="127.0.0.1"
+                )
+
+        except ValueError as erreur:
+
+            raise HTTPException(
+                status_code=404,
+                detail=str(erreur)
+            )
+
+        return {
+            "message": "Accès au dossier autorisé",
+            "patient_id": patient_id,
+            "medecin_id": medecin_id,
+            "dossier_id": dossier_id,
+            "type_relation": type_relation,
+            "contenu": contenu
+        }
+
+    # --------------------------------------------------------
+    # AUTRE ROLE
+    # --------------------------------------------------------
+
+    else:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Accès refusé"
+        )
+
+
+# ============================================================
+# CREATION DOSSIER MEDICAL
+# ============================================================
+
+@application.post("/dossiers")
+def creer_dossier_route(
+    data: DossierRequest,
+    utilisateur=Depends(obtenir_utilisateur_token)
+):
+
+    role = utilisateur["role"]
+    utilisateur_id = utilisateur["id"]
+
+    # Seuls les médecins peuvent créer un dossier.
+    if role != "medecin":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux médecins"
+        )
 
     verifier_role(
         role,
         "voir_dossiers"
     )
 
-    if not consentement_valide(
-        patient_id,
-        medecin_id
-    ):
+    # Le médecin doit avoir une relation active
+    # avec le patient.
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT id
+                FROM relations_patient_medecin
+                WHERE patient_id = %s
+                  AND medecin_id = %s
+                  AND actif = TRUE
+                """,
+                (
+                    data.patient_id,
+                    utilisateur_id
+                )
+            )
+
+            relation = cur.fetchone()
+
+    if not relation:
         raise HTTPException(
             status_code=403,
-            detail="Accès refusé : consentement du patient absent"
+            detail="Accès refusé : aucune relation médicale active"
         )
-
-    try:
-        contenu = lire_dossier(
-            patient_id=patient_id,
-            dossier_id=dossier_id,
-            utilisateur_id=medecin_id,
-            adresse_ip="127.0.0.1"
-        )
-    except ValueError as erreur:
-        raise HTTPException(
-            status_code=404,
-            detail=str(erreur)
-        )
-
-    return {
-        "message": "Accès au dossier autorisé",
-        "patient_id": patient_id,
-        "medecin_id": medecin_id,
-        "dossier_id": dossier_id,
-        "contenu": contenu
-    }
-
-
-@application.post("/dossiers")
-def creer_dossier_route(data: DossierRequest):
-
-    utilisateur_id = 2
 
     resultat = creer_dossier(
-        patient_id=data.patient_id,
-        contenu=data.contenu
-    )
+    patient_id=data.patient_id,
+    contenu=data.contenu,
+    motif=data.motif,
+    antecedents=data.antecedents,
+    allergies=data.allergies,
+    traitements=data.traitements,
+    observations=data.observations
+)
 
     enregistrer_action(
         utilisateur_id=utilisateur_id,
