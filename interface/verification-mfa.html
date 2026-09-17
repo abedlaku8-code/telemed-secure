@@ -1,40 +1,62 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vérification MFA - Telemed Secure</title>
+
+    <title>Vérification MFA | Telemed Secure</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <header>
-        <h1>Telemed Secure</h1>
-        <p>Vérification de sécurité</p>
-    </header>
+<header>
 
-    <main>
-        <h2>Vérification MFA</h2>
+    <div class="entete-marque">
+        <div class="logo-telemed">+</div>
 
-        <p>
-            Une deuxième vérification est nécessaire
-            pour accéder à votre compte.
-        </p>
+        <div class="identite-site">
+            <h1>Telemed Secure</h1>
+            <p>Vérification de sécurité</p>
+        </div>
+    </div>
 
-        <section class="carte">
-            <h3>🔐 Authenticator</h3>
+</header>
+
+<main>
+
+    <section class="formulaire-carte mfa-page">
+
+        <div style="text-align:center;">
+
+            <div class="icone-module" style="margin:0 auto 18px;">
+                🔐
+            </div>
+
+            <h2>Vérification MFA</h2>
 
             <p>
-                Saisissez le code à 6 chiffres généré
-                par votre application d'authentification.
+                Une deuxième vérification est nécessaire
+                avant d'accéder à votre compte.
             </p>
+
+        </div>
+
+        <div class="mfa-introduction">
+            Entrez le code à 6 chiffres généré par votre
+            application d'authentification.
+        </div>
+
+        <section style="margin-top:25px;">
 
             <label for="code-authenticator">
                 Code Authenticator
             </label>
 
             <input
+                class="mfa-code"
                 type="text"
                 id="code-authenticator"
                 maxlength="6"
@@ -42,19 +64,26 @@
                 inputmode="numeric"
                 pattern="[0-9]{6}"
                 autocomplete="one-time-code"
-                placeholder="Code à 6 chiffres"
+                placeholder="000000"
             >
 
-            <button id="bouton-authenticator" type="button">
-                Vérifier
+            <button
+                id="bouton-authenticator"
+                type="button"
+                style="width:100%; margin-top:15px;"
+            >
+                Vérifier le code
             </button>
+
         </section>
 
         <p id="message-mfa"></p>
 
-    </main>
+    </section>
 
-    <script src="verification-mfa.js"></script>
+</main>
+
+<script src="verification-mfa.js"></script>
 
 </body>
 </html>

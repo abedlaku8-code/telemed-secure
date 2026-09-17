@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sécurité - Telemed Secure</title>
+    <title>Sécurité & audit | Telemed Secure</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,26 +13,60 @@
 <body>
 
 <header>
-    <h1>Telemed Secure</h1>
-    <p>Centre de sécurité</p>
+
+    <div class="entete-marque">
+
+        <div class="logo-telemed">+</div>
+
+        <div class="identite-site">
+            <h1>Telemed Secure</h1>
+            <p>Centre de sécurité</p>
+        </div>
+
+    </div>
+
+    <nav class="navigation">
+        <a href="dashboard.html">Tableau de bord</a>
+        <a href="dossiers.html">Dossiers</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="securite.html">Sécurité</a>
+    </nav>
+
+    <button
+        type="button"
+        class="bouton-deconnexion"
+        onclick="seDeconnecter()"
+    >
+        Se déconnecter
+    </button>
+
 </header>
 
 <main>
 
-    <h2>Journal d'audit</h2>
+    <p class="badge badge-protege">
+        🛡️ Traçabilité active
+    </p>
+
+    <h2>Journal de sécurité</h2>
 
     <p>
-        Consultez les événements de sécurité et les accès
-        enregistrés sur la plateforme.
+        Consultez les événements de sécurité et les
+        accès enregistrés sur la plateforme.
     </p>
 
     <section class="carte">
 
-        <h3>Traçabilité des accès</h3>
+        <div class="icone-module">
+            📋
+        </div>
+
+        <h3>Journal d'audit</h3>
 
         <p>
             Les consultations et actions sensibles sont
-            enregistrées dans le journal d'audit.
+            enregistrées afin d'assurer la traçabilité
+            des opérations.
         </p>
 
         <button
@@ -46,7 +80,10 @@
 
     </section>
 
-    <div id="liste-audit"></div>
+    <div
+        id="liste-audit"
+        class="audit-liste"
+    ></div>
 
     <p>
         <a href="dashboard.html">
@@ -59,5 +96,4 @@
 <script src="securite.js"></script>
 
 </body>
-
 </html>

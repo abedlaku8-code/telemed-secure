@@ -2,30 +2,51 @@ const formulaire = document.getElementById("connexion-form");
 const message = document.getElementById("message-connexion");
 
 formulaire.addEventListener("submit", async function (event) {
+
     event.preventDefault();
 
-    const email = document.getElementById("email").value;
-    const motDePasse = document.getElementById("mot_de_passe").value;
+    const email =
+        document.getElementById("email").value.trim();
 
-    message.textContent = "Connexion en cours...";
+    const motDePasse =
+        document.getElementById("mot_de_passe").value;
+
+    const bouton =
+        formulaire.querySelector("button");
+
+    message.textContent =
+        "Connexion en cours...";
+
+    message.className = "";
+
+    bouton.disabled = true;
 
     try {
-        const reponse = await fetch("http://127.0.0.1:8000/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username: email,
-                password: motDePasse
-            })
-        });
 
-        const resultat = await reponse.json();
+        const reponse = await fetch(
+            "http://127.0.0.1:8000/login",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    username: email,
+                    password: motDePasse
+                })
+            }
+        );
+
+        const resultat =
+            await reponse.json();
 
         if (!reponse.ok) {
+
             throw new Error(
-                resultat.detail || "Échec de la connexion"
+                resultat.detail ||
+                "Échec de la connexion."
             );
         }
 
@@ -34,9 +55,17 @@ formulaire.addEventListener("submit", async function (event) {
             resultat.mfa_challenge
         );
 
-        window.location.href = "verification-mfa.html";
+        window.location.href =
+            "verification-mfa.html";
 
     } catch (erreur) {
-        message.textContent = erreur.message;
+
+        message.textContent =
+            erreur.message;
+
+        message.className =
+            "message-erreur";
+
+        bouton.disabled = false;
     }
 });

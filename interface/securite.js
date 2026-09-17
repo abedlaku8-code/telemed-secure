@@ -4,14 +4,30 @@ if (!token) {
     window.location.href = "connexion.html";
 }
 
-const message = document.getElementById("message-securite");
-const liste = document.getElementById("liste-audit");
+const message = document.getElementById(
+    "message-securite"
+);
+
+const liste = document.getElementById(
+    "liste-audit"
+);
+
+function seDeconnecter() {
+    sessionStorage.clear();
+    window.location.href = "connexion.html";
+}
 
 async function chargerJournalAudit() {
-    message.textContent = "Chargement du journal d'audit...";
+
+    message.textContent =
+        "Chargement du journal d'audit...";
+
+    message.className = "";
+
     liste.innerHTML = "";
 
     try {
+
         const reponse = await fetch(
             "http://127.0.0.1:8000/audit",
             {
@@ -25,6 +41,7 @@ async function chargerJournalAudit() {
         const donnees = await reponse.json();
 
         if (!reponse.ok) {
+
             throw new Error(
                 donnees.detail ||
                 "Impossible de consulter le journal d'audit."
@@ -32,32 +49,83 @@ async function chargerJournalAudit() {
         }
 
         if (donnees.evenements.length === 0) {
-            liste.innerHTML =
-                "<p>Aucun événement enregistré.</p>";
+
+            liste.innerHTML = `
+                <section class="carte">
+                    <h3>Aucun événement</h3>
+                    <p>
+                        Aucun événement d'audit n'est actuellement enregistré.
+                    </p>
+                </section>
+            `;
+
         } else {
-            donnees.evenements.forEach(function (evenement) {
 
-                const carte = document.createElement("section");
+            donnees.evenements.forEach(
+                function (evenement) {
 
-                carte.className = "carte";
+                    const carte =
+                        document.createElement("article");
 
-                carte.innerHTML = `
-                    <h3>${evenement.action}</h3>
-                    <p><strong>Utilisateur :</strong> ${evenement.email}</p>
-                    <p><strong>Rôle :</strong> ${evenement.role}</p>
-                    <p><strong>Ressource :</strong> ${evenement.ressource || "Non précisée"}</p>
-                    <p><strong>Adresse IP :</strong> ${evenement.adresse_ip || "Non précisée"}</p>
-                    <p><strong>Date :</strong> ${evenement.date_action}</p>
-                `;
+                    carte.className =
+                        "audit-evenement";
 
-                liste.appendChild(carte);
-            });
+                    carte.innerHTML = `
+
+                        <div class="audit-icone">
+                            🔐
+                        </div>
+
+                        <div class="audit-contenu">
+
+                            <h3>
+                                ${evenement.action}
+                            </h3>
+
+                            <p>
+                                <strong>Utilisateur :</strong>
+                                ${evenement.email}
+                            </p>
+
+                            <p>
+                                <strong>Rôle :</strong>
+                                ${evenement.role}
+                            </p>
+
+                            <p>
+                                <strong>Ressource :</strong>
+                                ${evenement.ressource || "Non précisée"}
+                            </p>
+
+                            <p>
+                                <strong>Adresse IP :</strong>
+                                ${evenement.adresse_ip || "Non précisée"}
+                            </p>
+
+                        </div>
+
+                        <div class="audit-date">
+                            ${evenement.date_action}
+                        </div>
+                    `;
+
+                    liste.appendChild(carte);
+                }
+            );
         }
 
         message.textContent =
             `${donnees.nombre} événement(s) d'audit chargé(s).`;
 
+        message.className =
+            "message-succes";
+
     } catch (erreur) {
-        message.textContent = erreur.message;
+
+        message.textContent =
+            erreur.message;
+
+        message.className =
+            "message-erreur";
     }
 }

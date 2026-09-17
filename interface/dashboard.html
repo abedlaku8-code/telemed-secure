@@ -1,44 +1,159 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord - Telemed Secure</title>
+
+    <title>Tableau de bord | Telemed Secure</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <header>
-        <h1>Telemed Secure</h1>
-        <p>Tableau de bord</p>
-    </header>
+<header>
 
-    <main>
-        <h2>Bienvenue sur votre tableau de bord</h2>
-        <p>
-            Gérez les services de télémédecine de manière simple,
-            sécurisée et confidentielle.
-        </p>
-        <div class="cartes">
-            <section class="carte">
-                <h3><a href="dossiers.html">Dossiers médicaux</a></h3>
-                <p>Consulter et gérer les dossiers médicaux simulés.</p>
-            </section>
+    <div class="entete-marque">
 
-            <section class="carte">
-                <h3><a href="utilisateurs.html">Utilisateurs</a></h3>
-                <p>Gérer les utilisateurs et leurs rôles sur la plateforme.</p>
-            </section>
+        <div class="logo-telemed">+</div>
 
-            <section class="carte">
-               <h3><a href="securite.html">Sécurité</a></h3>
-                <p>Consulter les événements de sécurité et les accès à la plateforme.</p>
-            </section>
+        <div class="identite-site">
+            <h1>Telemed Secure</h1>
+            <p>Espace sécurisé</p>
         </div>
-    </main>
 
-    <script src="dashboard.js"></script>
+    </div>
+
+    <nav class="navigation">
+        <a href="dashboard.html">Tableau de bord</a>
+        <a href="dossiers.html">Dossiers</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="securite.html">Sécurité</a>
+    </nav>
+
+    <button
+        type="button"
+        class="bouton-deconnexion"
+        onclick="seDeconnecter()"
+    >
+        Se déconnecter
+    </button>
+
+</header>
+
+<main>
+
+    <p class="badge badge-protege">
+        ● Session sécurisée
+    </p>
+
+    <h2>Bienvenue sur votre tableau de bord</h2>
+
+    <p>
+        Gérez les services de télémédecine de manière
+        simple, sécurisée et confidentielle.
+    </p>
+
+    <div class="cartes">
+
+        <a
+            href="dossiers.html"
+            class="carte carte-module"
+        >
+
+            <div class="icone-module">
+                🩺
+            </div>
+
+            <h3>Dossiers médicaux</h3>
+
+            <p>
+                Consulter les dossiers médicaux simulés
+                selon vos autorisations.
+            </p>
+
+            <span>
+                Accéder aux dossiers →
+            </span>
+
+        </a>
+
+        <a
+            href="utilisateurs.html"
+            class="carte carte-module"
+        >
+
+            <div class="icone-module">
+                👥
+            </div>
+
+            <h3>Utilisateurs & rôles</h3>
+
+            <p>
+                Vérifier les permissions et les règles
+                de contrôle d'accès RBAC.
+            </p>
+
+            <span>
+                Vérifier les autorisations →
+            </span>
+
+        </a>
+
+        <a
+            href="securite.html"
+            class="carte carte-module"
+        >
+
+            <div class="icone-module">
+                🛡️
+            </div>
+
+            <h3>Sécurité & audit</h3>
+
+            <p>
+                Consulter les événements de sécurité
+                enregistrés sur la plateforme.
+            </p>
+
+            <span>
+                Consulter le journal →
+            </span>
+
+        </a>
+
+    </div>
+
+    <section class="carte" style="margin-top:30px;">
+
+        <h3>État de protection</h3>
+
+        <div class="securite-item">
+            <span class="icone-securite">✓</span>
+            <span>Authentification renforcée par MFA</span>
+        </div>
+
+        <div class="securite-item">
+            <span class="icone-securite">✓</span>
+            <span>Contrôle d'accès basé sur les rôles</span>
+        </div>
+
+        <div class="securite-item">
+            <span class="icone-securite">✓</span>
+            <span>Données médicales protégées</span>
+        </div>
+
+        <div class="securite-item">
+            <span class="icone-securite">✓</span>
+            <span>Journalisation des actions sensibles</span>
+        </div>
+
+    </section>
+
+</main>
+
+<script src="dashboard.js"></script>
 
 </body>
 </html>

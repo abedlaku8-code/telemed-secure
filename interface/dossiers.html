@@ -1,44 +1,87 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dossiers médicaux - Telemed Secure</title>
+
+    <title>Dossiers médicaux | Telemed Secure</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <header>
-    <h1>Telemed Secure</h1>
-    <p>Dossiers médicaux</p>
+
+    <div class="entete-marque">
+
+        <div class="logo-telemed">+</div>
+
+        <div class="identite-site">
+            <h1>Telemed Secure</h1>
+            <p>Dossiers médicaux</p>
+        </div>
+
+    </div>
+
+    <nav class="navigation">
+        <a href="dashboard.html">Tableau de bord</a>
+        <a href="dossiers.html">Dossiers</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="securite.html">Sécurité</a>
+    </nav>
+
+    <button
+        type="button"
+        class="bouton-deconnexion"
+        onclick="seDeconnecter()"
+    >
+        Se déconnecter
+    </button>
+
 </header>
 
 <main>
 
-    <h2>Dossiers médicaux</h2>
+    <p class="badge badge-protege">
+        🔒 Dossier protégé
+    </p>
+
+    <h2>Dossier médical</h2>
 
     <p>
-        Consultation des dossiers médicaux simulés
-        selon les autorisations de sécurité.
+        Consultation des informations médicales selon
+        les autorisations de sécurité.
     </p>
 
     <section class="carte">
 
-        <h3>Dossier médical n°8</h3>
+        <div class="fiche-patient">
 
-        <p>
-            Patient simulé : Jean K.
-        </p>
+            <div class="avatar-patient">
+                JK
+            </div>
 
-        <p>
-            Identifiant patient : 1
-        </p>
+            <div class="informations-patient">
 
-        <p>
-            Dossier protégé par authentification,
-            autorisation RBAC et chiffrement.
-        </p>
+                <h3>Jean K.</h3>
+
+                <p>
+                    Patient simulé · Identifiant : 1
+                </p>
+
+                <span class="badge badge-info">
+                    Dossier n°8
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="protection-dossier">
+            🔐 Authentification · RBAC · Chiffrement
+        </div>
 
         <button
             type="button"
@@ -49,9 +92,13 @@
 
         <p id="message-dossier"></p>
 
-        <pre id="resultat-dossier"></pre>
-
     </section>
+
+    <section
+        id="resultat-dossier"
+        class="carte"
+        style="display:none;"
+    ></section>
 
     <p>
         <a href="dashboard.html">

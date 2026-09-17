@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Utilisateurs - Telemed Secure</title>
+    <title>Utilisateurs | Telemed Secure</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,26 +13,59 @@
 <body>
 
 <header>
-    <h1>Telemed Secure</h1>
-    <p>Gestion des utilisateurs</p>
+
+    <div class="entete-marque">
+
+        <div class="logo-telemed">+</div>
+
+        <div class="identite-site">
+            <h1>Telemed Secure</h1>
+            <p>Gestion des utilisateurs</p>
+        </div>
+
+    </div>
+
+    <nav class="navigation">
+        <a href="dashboard.html">Tableau de bord</a>
+        <a href="dossiers.html">Dossiers</a>
+        <a href="utilisateurs.html">Utilisateurs</a>
+        <a href="securite.html">Sécurité</a>
+    </nav>
+
+    <button
+        type="button"
+        class="bouton-deconnexion"
+        onclick="seDeconnecter()"
+    >
+        Se déconnecter
+    </button>
+
 </header>
 
 <main>
 
-    <h2>Gestion des utilisateurs</h2>
+    <p class="badge badge-admin">
+        🛡️ Contrôle RBAC
+    </p>
+
+    <h2>Utilisateurs & autorisations</h2>
 
     <p>
-        Cette section vérifie les autorisations liées
-        à la gestion des utilisateurs.
+        Vérifiez les permissions accordées selon le rôle
+        de l'utilisateur connecté.
     </p>
 
     <section class="carte">
 
-        <h3>Contrôle RBAC</h3>
+        <div class="icone-module">
+            👥
+        </div>
+
+        <h3>Contrôle d'accès</h3>
 
         <p>
-            L'accès aux fonctions d'administration
-            est contrôlé selon le rôle de l'utilisateur.
+            Les fonctions d'administration sont protégées
+            par un contrôle d'accès basé sur les rôles.
         </p>
 
         <button
@@ -44,7 +77,11 @@
 
         <p id="message-utilisateurs"></p>
 
-        <pre id="resultat-utilisateurs"></pre>
+        <div
+            id="resultat-utilisateurs"
+            class="resultat-rbac"
+            style="display:none;"
+        ></div>
 
     </section>
 
@@ -59,5 +96,4 @@
 <script src="utilisateurs.js"></script>
 
 </body>
-
 </html>
