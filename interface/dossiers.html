@@ -9,34 +9,59 @@
 
 <body>
 
-    <header>
-        <h1>Telemed Secure</h1>
-        <p>Dossiers médicaux</p>
-    </header>
+<header>
+    <h1>Telemed Secure</h1>
+    <p>Dossiers médicaux</p>
+</header>
 
-    <main>
-        <h2>Dossiers médicaux simulés</h2>
+<main>
+
+    <h2>Dossiers médicaux</h2>
+
+    <p>
+        Consultation des dossiers médicaux simulés
+        selon les autorisations de sécurité.
+    </p>
+
+    <section class="carte">
+
+        <h3>Dossier médical n°8</h3>
 
         <p>
-            Consultez les dossiers médicaux autorisés
-            dans le cadre de cette simulation.
+            Patient simulé : Jean K.
         </p>
-        <div class="cartes">
-            <section class="carte">
-                <h3>Patient simulé</h3>
-                <p>Nom : Jean K.</p>
-                <p>Statut : Dossier actif</p>
-            </section>
-            <section class="carte">
-                <h3>Patient simulé</h3>
-                <p>Nom : Marie L.</p>
-                <p>Statut : Dossier en attente</p>
-            </section>
-        </div>
+
         <p>
-            <a href="dashboard.html">← Retour au tableau de bord</a>
+            Identifiant patient : 1
         </p>
-    </main>
+
+        <p>
+            Dossier protégé par authentification,
+            autorisation RBAC et chiffrement.
+        </p>
+
+        <button
+            type="button"
+            onclick="consulterDossier()"
+        >
+            Consulter le dossier
+        </button>
+
+        <p id="message-dossier"></p>
+
+        <pre id="resultat-dossier"></pre>
+
+    </section>
+
+    <p>
+        <a href="dashboard.html">
+            ← Retour au tableau de bord
+        </a>
+    </p>
+
+</main>
+
+<script src="dossiers.js"></script>
 
 </body>
 </html>

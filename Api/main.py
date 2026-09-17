@@ -3,10 +3,13 @@ import secrets
 import time
 from datetime import datetime, timedelta, timezone
 
+
+
 import pyotp
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
@@ -50,6 +53,20 @@ if not TOTP_SECRET:
 
 
 application = FastAPI(title="Telemed Secure API")
+application = FastAPI(title="Telemed Secure API")
+
+application.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+securite = HTTPBearer()
 
 securite = HTTPBearer()
 
@@ -1262,7 +1279,57 @@ def obtenir_medecin_principal(
         } if relation[7] and relation[8] else None
     }
 
+@application.get("/audit")
+def consulter_audit(
+    utilisateur=Depends(obtenir_utilisateur_token)
+):
+    role = utilisateur["role"]
 
+    if role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès au journal d'audit réservé aux administrateurs"
+        )
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    ja.id,
+                    ja.utilisateur_id,
+                    u.email,
+                    u.role,
+                    ja.action,
+                    ja.ressource,
+                    ja.adresse_ip,
+                    ja.date_action
+                FROM journal_audit ja
+                JOIN utilisateurs u
+                    ON u.id = ja.utilisateur_id
+                ORDER BY ja.date_action DESC
+                LIMIT 50
+                """
+            )
+
+            lignes = cur.fetchall()
+
+    return {
+        "nombre": len(lignes),
+        "evenements": [
+            {
+                "id": ligne[0],
+                "utilisateur_id": ligne[1],
+                "email": ligne[2],
+                "role": ligne[3],
+                "action": ligne[4],
+                "ressource": ligne[5],
+                "adresse_ip": ligne[6],
+                "date_action": ligne[7]
+            }
+            for ligne in lignes
+        ]
+    }
 # ============================================================
 # NOTIFICATIONS
 # ============================================================

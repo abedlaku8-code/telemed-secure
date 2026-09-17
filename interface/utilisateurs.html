@@ -1,40 +1,63 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Utilisateurs - Telemed Secure</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <header>
-        <h1>Telemed Secure</h1>
-        <p>Gestion des utilisateurs</p>
-    </header>
+<header>
+    <h1>Telemed Secure</h1>
+    <p>Gestion des utilisateurs</p>
+</header>
 
-    <main>
-        <h2>Utilisateurs</h2>
+<main>
+
+    <h2>Gestion des utilisateurs</h2>
+
+    <p>
+        Cette section vérifie les autorisations liées
+        à la gestion des utilisateurs.
+    </p>
+
+    <section class="carte">
+
+        <h3>Contrôle RBAC</h3>
 
         <p>
-            Gestion des utilisateurs et de leurs rôles
-            dans la plateforme.
+            L'accès aux fonctions d'administration
+            est contrôlé selon le rôle de l'utilisateur.
         </p>
-        <div class="cartes">
-            <section class="carte">
-                <h3>Utilisateur simulé</h3>
-                <p>Nom : Administrateur</p>
-                <p>Rôle : Administrateur</p>
-            </section>
-            <section class="carte">
-                <h3>Utilisateur simulé</h3>
-                <p>Nom : Médecin</p>
-                <p>Rôle : Médecin</p>
-            </section>
-        </div>
-        <p><a href="dashboard.html">← Retour au tableau de bord</a></p>
-    </main>
+
+        <button
+            type="button"
+            onclick="verifierAdministration()"
+        >
+            Vérifier mes autorisations
+        </button>
+
+        <p id="message-utilisateurs"></p>
+
+        <pre id="resultat-utilisateurs"></pre>
+
+    </section>
+
+    <p>
+        <a href="dashboard.html">
+            ← Retour au tableau de bord
+        </a>
+    </p>
+
+</main>
+
+<script src="utilisateurs.js"></script>
 
 </body>
+
 </html>
