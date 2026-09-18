@@ -1,73 +1,84 @@
-const formulaire =
-    document.getElementById(
-        "formulaire-recuperation"
-    );
+const formulaire = document.getElementById("formulaire-recuperation");
+const identifiant = document.getElementById("identifiant-recuperation");
+const bouton = document.getElementById("bouton-recuperation");
+const message = document.getElementById("message-recuperation");
 
-const identifiant =
-    document.getElementById(
-        "identifiant-recuperation"
-    );
+formulaire.addEventListener("submit", async function (event) {
 
-const bouton =
-    document.getElementById(
-        "bouton-recuperation"
-    );
+    event.preventDefault();
 
-const message =
-    document.getElementById(
-        "message-recuperation"
-    );
+    const valeur = identifiant.value.trim();
 
+    if (!valeur) {
+        message.textContent =
+            "Veuillez saisir votre adresse e-mail ou votre numéro de téléphone.";
 
-formulaire.addEventListener(
-    "submit",
-    async function (event) {
+        message.className = "message erreur";
+        return;
+    }
 
-        event.preventDefault();
+    bouton.disabled = true;
 
-        const valeur =
-            identifiant.value.trim();
+    message.textContent =
+        "Traitement de votre demande...";
 
-        if (!valeur) {
+    message.className = "message chargement";
 
-            message.textContent =
-                "Veuillez saisir votre adresse e-mail ou votre numéro de téléphone.";
+    try {
 
-            message.className =
-                "message erreur";
+        const reponse = await fetch(
+            "http://127.0.0.1:8000/mot-de-passe-oublie",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    identifiant: valeur
+                })
+            }
+        );
+
+        const donnees = await reponse.json();
+
+        if (!reponse.ok) {
+            throw new Error(
+                donnees.detail ||
+                "Une erreur est survenue."
+            );
+        }
+
+        if (donnees.jeton_demo) {
+
+            sessionStorage.setItem(
+                "jeton_reinitialisation",
+                donnees.jeton_demo
+            );
+
+            window.location.href =
+                "nouveau-mot-de-passe.html";
 
             return;
         }
 
-
-        bouton.disabled = true;
-
         message.textContent =
-            "Préparation de la demande...";
+            donnees.message;
 
         message.className =
-            "message chargement";
+            "message information";
 
+    } catch (erreur) {
 
-        /*
-         * La réinitialisation réelle sera connectée
-         * au backend sécurisé ultérieurement.
-         *
-         * Aucun code de récupération, mot de passe
-         * ou secret n'est généré côté navigateur.
-         */
+        message.textContent =
+            erreur.message ||
+            "Impossible de traiter la demande.";
 
-        setTimeout(function () {
+        message.className =
+            "message erreur";
 
-            message.textContent =
-                "La fonctionnalité de réinitialisation sécurisée sera disponible après l'intégration du service d'envoi.";
+    } finally {
 
-            message.className =
-                "message information";
-
-            bouton.disabled = false;
-
-        }, 700);
-
+        bouton.disabled = false;
     }
-);
+
+});

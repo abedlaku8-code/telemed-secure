@@ -207,6 +207,15 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class DemandeReinitialisationRequest(BaseModel):
+    identifiant: str
+
+
+class NouveauMotDePasseRequest(BaseModel):
+    jeton: str
+    nouveau_mot_de_passe: str
+
+
 class InscriptionRequest(BaseModel):
     nom: str
     prenom: str
@@ -468,6 +477,277 @@ def creer_utilisateur(
         "telephone": utilisateur[4],
         "role": utilisateur[5]
     }
+
+# ============================================================
+# RÉINITIALISATION DU MOT DE PASSE — DEMANDE
+# ============================================================
+
+@application.post("/mot-de-passe-oublie")
+def demander_reinitialisation(
+    data: DemandeReinitialisationRequest
+):
+    identifiant = data.identifiant.strip().lower()
+
+    if not identifiant:
+        raise HTTPException(
+            status_code=400,
+            detail="Identifiant requis"
+        )
+
+    with get_connection() as conn:
+
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT id, email, telephone, actif
+                FROM utilisateurs
+                WHERE email = %s
+                   OR telephone = %s
+                """,
+                (
+                    identifiant,
+                    identifiant
+                )
+            )
+
+            utilisateur = cur.fetchone()
+
+            # Réponse volontairement identique si le compte
+            # n'existe pas afin d'éviter l'énumération des comptes.
+            if not utilisateur:
+
+                return {
+                    "message": (
+                        "Si un compte correspondant existe, "
+                        "une procédure de réinitialisation sera disponible."
+                    )
+                }
+
+            utilisateur_id = utilisateur[0]
+            email_db = utilisateur[1]
+            telephone_db = utilisateur[2]
+            actif = utilisateur[3]
+
+            if not actif:
+
+                return {
+                    "message": (
+                        "Si un compte correspondant existe, "
+                        "une procédure de réinitialisation sera disponible."
+                    )
+                }
+
+            # ------------------------------------------------
+            # INVALIDATION DES ANCIENS JETONS
+            # ------------------------------------------------
+
+            cur.execute(
+                """
+                UPDATE jetons_reinitialisation
+                SET utilise = TRUE
+                WHERE utilisateur_id = %s
+                  AND utilise = FALSE
+                """,
+                (utilisateur_id,)
+            )
+
+            # ------------------------------------------------
+            # CRÉATION DU NOUVEAU JETON
+            # ------------------------------------------------
+
+            jeton = secrets.token_urlsafe(32)
+
+            jeton_hash = pwd_context.hash(jeton)
+
+            date_expiration = (
+                datetime.now()
+                + timedelta(minutes=15)
+            )
+
+            cur.execute(
+                """
+                INSERT INTO jetons_reinitialisation
+                    (
+                        utilisateur_id,
+                        jeton_hash,
+                        date_expiration,
+                        utilise
+                    )
+                VALUES
+                    (%s, %s, %s, FALSE)
+                """,
+                (
+                    utilisateur_id,
+                    jeton_hash,
+                    date_expiration
+                )
+            )
+
+            # ------------------------------------------------
+            # JOURNAL D'AUDIT
+            # ------------------------------------------------
+
+            enregistrer_action(
+                utilisateur_id=utilisateur_id,
+                action="DEMANDE_REINITIALISATION_MOT_DE_PASSE",
+                ressource="compte",
+                adresse_ip="127.0.0.1"
+            )
+
+    # --------------------------------------------------------
+    # MODE DÉMONSTRATION
+    # --------------------------------------------------------
+    #
+    # Pour l'instant, aucun e-mail réel n'est envoyé.
+    # Le jeton est retourné uniquement pour permettre
+    # les tests de la fonctionnalité en environnement
+    # académique de démonstration.
+    #
+
+    return {
+        "message": (
+            "Si un compte correspondant existe, "
+            "une procédure de réinitialisation sera disponible."
+        ),
+        "jeton_demo": jeton
+    }
+
+
+# ============================================================
+# RÉINITIALISATION DU MOT DE PASSE — VALIDATION
+# ============================================================
+
+@application.post("/reinitialiser-mot-de-passe")
+def reinitialiser_mot_de_passe(
+    data: NouveauMotDePasseRequest
+):
+    jeton = data.jeton.strip()
+    nouveau_mot_de_passe = data.nouveau_mot_de_passe
+
+    if not jeton:
+        raise HTTPException(
+            status_code=400,
+            detail="Jeton requis"
+        )
+
+    if len(nouveau_mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Le nouveau mot de passe doit contenir au moins 8 caractères"
+        )
+
+    with get_connection() as conn:
+
+        with conn.cursor() as cur:
+
+            # ------------------------------------------------
+            # RECHERCHE DES JETONS ACTIFS
+            # ------------------------------------------------
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    utilisateur_id,
+                    jeton_hash,
+                    date_expiration,
+                    utilise
+                FROM jetons_reinitialisation
+                WHERE utilise = FALSE
+                  AND date_expiration > CURRENT_TIMESTAMP
+                ORDER BY date_creation DESC
+                """
+            )
+
+            jetons = cur.fetchall()
+
+            jeton_trouve = None
+
+            for ligne in jetons:
+
+                jeton_id = ligne[0]
+                utilisateur_id = ligne[1]
+                jeton_hash = ligne[2]
+                date_expiration = ligne[3]
+
+                if pwd_context.verify(
+                    jeton,
+                    jeton_hash
+                ):
+                    jeton_trouve = (
+                        jeton_id,
+                        utilisateur_id,
+                        date_expiration
+                    )
+                    break
+
+            # ------------------------------------------------
+            # JETON INVALIDE
+            # ------------------------------------------------
+
+            if not jeton_trouve:
+
+                raise HTTPException(
+                    status_code=400,
+                    detail="Jeton invalide ou expiré"
+                )
+
+            jeton_id = jeton_trouve[0]
+            utilisateur_id = jeton_trouve[1]
+
+            # ------------------------------------------------
+            # HACHAGE DU NOUVEAU MOT DE PASSE
+            # ------------------------------------------------
+
+            nouveau_hash = pwd_context.hash(
+                nouveau_mot_de_passe
+            )
+
+            # ------------------------------------------------
+            # MISE À JOUR DU MOT DE PASSE
+            # ------------------------------------------------
+
+            cur.execute(
+                """
+                UPDATE utilisateurs
+                SET password_hash = %s
+                WHERE id = %s
+                """,
+                (
+                    nouveau_hash,
+                    utilisateur_id
+                )
+            )
+
+            # ------------------------------------------------
+            # INVALIDATION DU JETON
+            # ------------------------------------------------
+
+            cur.execute(
+                """
+                UPDATE jetons_reinitialisation
+                SET utilise = TRUE
+                WHERE id = %s
+                """,
+                (jeton_id,)
+            )
+
+            # ------------------------------------------------
+            # JOURNAL D'AUDIT
+            # ------------------------------------------------
+
+            enregistrer_action(
+                utilisateur_id=utilisateur_id,
+                action="REINITIALISATION_MOT_DE_PASSE",
+                ressource="compte",
+                adresse_ip="127.0.0.1"
+            )
+
+    return {
+        "message": "Mot de passe réinitialisé avec succès."
+    }
+
 
 
 # ============================================================

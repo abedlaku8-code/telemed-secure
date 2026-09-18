@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Nouveau mot de passe | Telemed Secure</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body class="page-mfa">
+
+
+    <main class="carte-mfa">
+
+
+        <header class="en-tete-mfa">
+
+            <div class="icone-mfa">
+                🔐
+            </div>
+
+            <span class="sur-titre">
+                SÉCURISATION DU COMPTE
+            </span>
+
+            <h1>
+                Nouveau mot de passe
+            </h1>
+
+            <p>
+                Choisissez un nouveau mot de passe
+                sécurisé pour votre compte.
+            </p>
+
+        </header>
+
+
+        <form id="formulaire-nouveau-mot-de-passe">
+
+
+            <div class="groupe-formulaire">
+
+                <label for="nouveau-mot-de-passe">
+                    Nouveau mot de passe
+                </label>
+
+                <input
+                    type="password"
+                    id="nouveau-mot-de-passe"
+                    name="nouveau_mot_de_passe"
+                    placeholder="Minimum 8 caractères"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+
+            </div>
+
+
+            <div class="groupe-formulaire">
+
+                <label for="confirmation-mot-de-passe">
+                    Confirmer le nouveau mot de passe
+                </label>
+
+                <input
+                    type="password"
+                    id="confirmation-mot-de-passe"
+                    name="confirmation_mot_de_passe"
+                    placeholder="Retapez votre mot de passe"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="bouton-principal"
+                id="bouton-reinitialisation"
+            >
+                Réinitialiser le mot de passe
+            </button>
+
+
+            <p
+                id="message-reinitialisation"
+                class="message"
+                aria-live="polite"
+            ></p>
+
+
+        </form>
+
+
+        <div class="note-securite">
+
+            🔐
+
+            <strong>
+                Protection du compte
+            </strong>
+
+            <br>
+
+            Votre nouveau mot de passe sera
+            protégé par un mécanisme de hachage
+            sécurisé.
+
+        </div>
+
+
+        <a
+            href="index.html"
+            class="retour-connexion"
+        >
+            ← Retour à la connexion
+        </a>
+
+
+    </main>
+
+
+    <script src="nouveau-mot-de-passe.js"></script>
+
+</body>
+
+</html>
