@@ -1,99 +1,229 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Utilisateurs | Telemed Secure</title>
+    <title>Administration | Telemed Secure</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="page-interne">
 
-<header>
+    <header class="barre-navigation">
 
-    <div class="entete-marque">
+        <div class="marque">
 
-        <div class="logo-telemed">+</div>
+            <div class="icone-logo">✚</div>
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Gestion des utilisateurs</p>
+            <div>
+                <strong>Telemed Secure</strong>
+                <span>Télémédecine sécurisée</span>
+            </div>
+
         </div>
 
-    </div>
+        <nav class="navigation-principale">
 
-    <nav class="navigation">
-        <a href="dashboard.html">Tableau de bord</a>
-        <a href="dossiers.html">Dossiers</a>
-        <a href="utilisateurs.html">Utilisateurs</a>
-        <a href="securite.html">Sécurité</a>
-    </nav>
+            <a href="dashboard.html">
+                Tableau de bord
+            </a>
 
-    <button
-        type="button"
-        class="bouton-deconnexion"
-        onclick="seDeconnecter()"
-    >
-        Se déconnecter
-    </button>
+            <a href="dossiers.html">
+                Dossiers
+            </a>
 
-</header>
+            <a href="utilisateurs.html" class="actif" id="lien-administration">
+                Administration
+            </a>
 
-<main>
+            <a href="securite.html" id="lien-audit">
+                Audit
+            </a>
 
-    <p class="badge badge-admin">
-        🛡️ Contrôle RBAC
-    </p>
-
-    <h2>Utilisateurs & autorisations</h2>
-
-    <p>
-        Vérifiez les permissions accordées selon le rôle
-        de l'utilisateur connecté.
-    </p>
-
-    <section class="carte">
-
-        <div class="icone-module">
-            👥
-        </div>
-
-        <h3>Contrôle d'accès</h3>
-
-        <p>
-            Les fonctions d'administration sont protégées
-            par un contrôle d'accès basé sur les rôles.
-        </p>
+        </nav>
 
         <button
             type="button"
-            onclick="verifierAdministration()"
+            id="bouton-deconnexion"
+            class="bouton-deconnexion"
         >
-            Vérifier mes autorisations
+            Déconnexion
         </button>
 
-        <p id="message-utilisateurs"></p>
+    </header>
 
-        <div
-            id="resultat-utilisateurs"
-            class="resultat-rbac"
-            style="display:none;"
-        ></div>
 
-    </section>
+    <main class="conteneur-page">
 
-    <p>
-        <a href="dashboard.html">
-            ← Retour au tableau de bord
-        </a>
-    </p>
+        <section class="en-tete-page">
 
-</main>
+            <div>
 
-<script src="utilisateurs.js"></script>
+                <span class="sur-titre">
+                    CONTRÔLE D'ACCÈS
+                </span>
+
+                <h1>Administration</h1>
+
+                <p>
+                    Gestion des fonctions administratives selon
+                    les permissions attribuées au compte.
+                </p>
+
+            </div>
+
+            <span class="badge-securite">
+                🛡️ RBAC
+            </span>
+
+        </section>
+
+
+        <section class="carte-administration">
+
+            <div class="entete-carte">
+
+                <div>
+
+                    <h2>Contrôle des autorisations</h2>
+
+                    <p>
+                        Cette vérification permet de confirmer
+                        les permissions administratives de votre compte.
+                    </p>
+
+                </div>
+
+                <span class="badge-rbac">
+                    RBAC actif
+                </span>
+
+            </div>
+
+
+            <div class="bloc-rbac">
+
+                <div class="icone-rbac">
+                    👤
+                </div>
+
+                <div>
+
+                    <h3>
+                        Vérification du rôle
+                    </h3>
+
+                    <p>
+                        L'accès administratif est déterminé par
+                        le rôle et les permissions enregistrés
+                        côté serveur.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="bouton-verifier-administration"
+                class="bouton-principal"
+                onclick="verifierAdministration()"
+            >
+                Vérifier mes autorisations
+            </button>
+
+
+            <p
+                id="message-utilisateurs"
+                class="message"
+                aria-live="polite"
+            ></p>
+
+
+            <div
+                id="resultat-utilisateurs"
+                class="resultat-rbac"
+            ></div>
+
+        </section>
+
+
+        <section class="grille-securite">
+
+            <article class="petite-carte-securite">
+
+                <span>🔐</span>
+
+                <div>
+
+                    <strong>Authentification</strong>
+
+                    <p>
+                        Accès protégé par mot de passe et MFA.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <article class="petite-carte-securite">
+
+                <span>🛡️</span>
+
+                <div>
+
+                    <strong>Autorisation</strong>
+
+                    <p>
+                        Les permissions sont contrôlées par le RBAC.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <article class="petite-carte-securite">
+
+                <span>📋</span>
+
+                <div>
+
+                    <strong>Traçabilité</strong>
+
+                    <p>
+                        Les actions sensibles sont journalisées.
+                    </p>
+
+                </div>
+
+            </article>
+
+        </section>
+
+    </main>
+
+
+    <footer class="pied-page">
+
+        <p>
+            Telemed Secure — Projet académique de télémédecine
+            simulée et sécurisée
+        </p>
+
+        <span>
+            Données fictives et anonymisées
+        </span>
+
+    </footer>
+
+
+    <script src="navigation.js"></script>
+    <script src="utilisateurs.js"></script>
 
 </body>
 </html>

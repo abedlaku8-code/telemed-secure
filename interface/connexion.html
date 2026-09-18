@@ -1,94 +1,112 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Connexion | Telemed Secure</title>
+```
+<title>Connexion | Telemed Secure</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
+```
+
 </head>
 
 <body>
 
 <header>
 
-    <div class="entete-marque">
-        <div class="logo-telemed">+</div>
+```
+<div class="entete-marque">
+    <div class="logo-telemed">+</div>
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Accès sécurisé</p>
-        </div>
+    <div class="identite-site">
+        <h1>Telemed Secure</h1>
+        <p>Accès sécurisé</p>
     </div>
+</div>
 
-    <nav class="navigation">
-        <a href="index.html">Accueil</a>
-    </nav>
+<nav class="navigation">
+    <a href="index.html">Accueil</a>
+</nav>
+```
 
 </header>
 
 <main>
 
-    <section class="formulaire-carte">
 
-        <div style="text-align:center;">
+<section class="formulaire-carte">
 
-            <div class="icone-module" style="margin:0 auto 18px;">
-                🔐
-            </div>
+    <div style="text-align:center;">
 
-            <h2>Bienvenue</h2>
+        <div class="icone-module" style="margin:0 auto 18px;">
+            🔐
+        </div>
 
-            <p>
-                Connectez-vous pour accéder à votre espace sécurisé.
-            </p>
+        <h2>Bienvenue</h2>
+
+        <p>
+            Connectez-vous pour accéder à votre espace sécurisé.
+        </p>
+
+    </div>
+
+    <form id="connexion-form">
+
+        <label for="email">
+            Adresse e-mail ou numéro de téléphone
+        </label>
+
+        <input
+            type="text"
+            id="email"
+            name="email"
+            placeholder="exemple@telemed.local"
+            autocomplete="username"
+            required
+        >
+
+        <label for="mot_de_passe">
+            Mot de passe
+        </label>
+
+        <input
+            type="password"
+            id="mot_de_passe"
+            name="mot_de_passe"
+            placeholder="Votre mot de passe"
+            autocomplete="current-password"
+            required
+        >
+
+        <button type="submit">
+            Se connecter
+        </button>
+
+        <div class="actions-secondaires-connexion">
+
+            <a
+                href="mot-de-passe-oublie.html"
+                class="lien-secondaire">
+                Mot de passe oublié ?
+            </a>
+
+            <a
+                href="inscription.html"
+                class="lien-secondaire">
+                Créer un compte
+            </a>
 
         </div>
 
-        <form id="connexion-form">
+        <p id="message-connexion"></p>
 
-            <label for="email">
-                Adresse e-mail
-            </label>
+    </form>
 
-            <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="exemple@telemed.local"
-                autocomplete="username"
-                required
-            >
-
-            <label for="mot_de_passe">
-                Mot de passe
-            </label>
-
-            <input
-                type="password"
-                id="mot_de_passe"
-                name="mot_de_passe"
-                placeholder="Votre mot de passe"
-                autocomplete="current-password"
-                required
-            >
-
-            <button type="submit">
-                Se connecter
-            </button>
-
-            <p id="message-connexion"></p>
-
-        </form>
-
-        <p style="font-size:13px; text-align:center;">
-            🔒 Vos accès sont protégés par une authentification
-            renforcée.
-        </p>
-
-    </section>
+</section>
 
 </main>
 

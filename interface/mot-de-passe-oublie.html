@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mot de passe oublié | Telemed Secure</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body class="page-mfa">
+
+    <main class="carte-mfa">
+
+        <header class="en-tete-mfa">
+
+            <div class="icone-mfa">
+                🔑
+            </div>
+
+            <span class="sur-titre">
+                RÉCUPÉRATION DU COMPTE
+            </span>
+
+            <h1>
+                Mot de passe oublié ?
+            </h1>
+
+            <p>
+                Entrez votre adresse e-mail ou votre numéro
+                de téléphone afin de demander la réinitialisation
+                de votre mot de passe.
+            </p>
+
+        </header>
+
+
+        <form id="formulaire-recuperation">
+
+            <div class="groupe-formulaire">
+
+                <label for="identifiant-recuperation">
+                    Adresse e-mail ou numéro de téléphone
+                </label>
+
+                <input
+                    type="text"
+                    id="identifiant-recuperation"
+                    name="identifiant"
+                    placeholder="exemple@telemed.local ou +243..."
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="bouton-principal"
+                id="bouton-recuperation"
+            >
+                Demander la réinitialisation
+            </button>
+
+
+            <p
+                id="message-recuperation"
+                class="message"
+                aria-live="polite"
+            ></p>
+
+        </form>
+
+
+        <div class="note-securite">
+
+            🔐
+
+            <strong>
+                Protection du compte
+            </strong>
+
+            <br>
+
+            Pour des raisons de sécurité, aucune information
+            sensible ne sera affichée si le compte demandé
+            n'existe pas.
+
+        </div>
+
+
+        <a
+            href="index.html"
+            class="retour-connexion"
+        >
+            ← Retour à la connexion
+        </a>
+
+    </main>
+
+
+    <script src="mot-de-passe-oublie.js"></script>
+
+</body>
+
+</html>

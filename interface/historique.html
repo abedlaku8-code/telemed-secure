@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Journal / Historique - TeleMed Secure</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-tableau-bord">
+
+<div class="application">
+
+    <!-- =====================================================
+         BARRE LATERALE
+         ===================================================== -->
+
+    <aside class="barre-laterale">
+
+        <div class="identite-application">
+
+            <div class="logo-telemed">
+                +
+            </div>
+
+            <div>
+                <h1>TeleMed</h1>
+                <span>Secure</span>
+            </div>
+
+        </div>
+
+
+        <nav class="navigation-principale">
+
+            <a href="dashboard.html"
+               class="element-navigation">
+
+                <span class="icone-navigation">▣</span>
+                <span>Dashboard</span>
+
+            </a>
+
+
+            <a href="dossiers.html"
+               class="element-navigation">
+
+                <span class="icone-navigation">▤</span>
+                <span>Dossiers</span>
+
+            </a>
+
+
+            <a href="medecins.html"
+               class="element-navigation"
+               id="lien-mes-demandes">
+
+                <span class="icone-navigation">♧</span>
+                <span>Mes demandes</span>
+
+            </a>
+
+
+            <a href="notifications.html"
+               class="element-navigation">
+
+                <span class="icone-navigation">🔔</span>
+                <span>Notifications</span>
+
+            </a>
+
+
+            <a href="historique.html"
+               class="element-navigation actif"
+               id="lien-audit">
+
+                <span class="icone-navigation">◷</span>
+                <span>Journal / Historique</span>
+
+            </a>
+
+
+            <a href="parametres.html"
+               class="element-navigation">
+
+                <span class="icone-navigation">⚙</span>
+                <span>Paramètres</span>
+
+            </a>
+
+
+            <a href="utilisateurs.html"
+               class="element-navigation"
+               id="lien-administration">
+
+                <span class="icone-navigation">⚙</span>
+                <span>Administration</span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- SECURITE -->
+
+        <div class="bloc-securite-laterale">
+
+            <div class="icone-securite">
+                🔒
+            </div>
+
+            <div>
+                <strong>Protection active</strong>
+                <span>MFA · RBAC · Audit</span>
+            </div>
+
+        </div>
+
+
+        <!-- DECONNEXION -->
+
+        <button
+            id="bouton-deconnexion"
+            class="bouton-deconnexion">
+
+            <span>↪</span>
+            <span>Déconnexion</span>
+
+        </button>
+
+    </aside>
+
+
+    <!-- =====================================================
+         CONTENU PRINCIPAL
+         ===================================================== -->
+
+    <main class="contenu-principal">
+
+
+        <!-- EN-TETE -->
+
+        <div class="entete-tableau-bord">
+
+            <div>
+
+                <span class="petit-titre">
+                    SUIVI DE SÉCURITÉ
+                </span>
+
+                <h2>
+                    Journal / Historique
+                </h2>
+
+                <p>
+                    Consultez l'historique de vos actions sur la plateforme.
+                </p>
+
+            </div>
+
+
+            <!-- PROFIL -->
+
+            <div class="profil-utilisateur">
+
+                <div
+                    class="avatar-utilisateur"
+                    id="initiales-utilisateur">
+
+                    TE
+
+                </div>
+
+                <div>
+
+                    <strong id="nom-utilisateur">
+                        Utilisateur
+                    </strong>
+
+                    <span id="role-utilisateur">
+                        Utilisateur
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RETOUR -->
+
+        <div style="margin-bottom: 20px;">
+
+            <button
+                type="button"
+                class="bouton-secondaire"
+                onclick="history.back()">
+
+                ← Retour
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             CARTE HISTORIQUE
+             ================================================= -->
+
+        <section class="carte-tableau">
+
+
+            <!-- EN-TETE CARTE -->
+
+            <div class="entete-carte">
+
+                <div>
+
+                    <span class="etiquette-section">
+                        JOURNALISATION
+                    </span>
+
+                    <h3>
+                        Mes activités
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div
+                id="message-historique"
+                class="resume-audit">
+
+                Chargement de votre historique...
+
+            </div>
+
+
+            <!-- TABLEAU -->
+
+            <div class="zone-tableau">
+
+                <table class="tableau-audit">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+
+                            <th>
+                                Ressource
+                            </th>
+
+                            <th>
+                                Adresse IP
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="liste-historique">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- NOTE -->
+
+            <div class="note-audit">
+
+                Les actions affichées correspondent aux activités
+                enregistrées dans le journal d'audit de votre compte.
+
+            </div>
+
+        </section>
+
+
+        <!-- PIED -->
+
+        <footer class="pied-page">
+
+            <span>
+                TeleMed Secure
+            </span>
+
+            <span>
+                Journalisation et traçabilité des activités
+            </span>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<script src="navigation.js?v=6"></script>
+<script src="historique.js?v=1"></script>
+
+</body>
+</html>

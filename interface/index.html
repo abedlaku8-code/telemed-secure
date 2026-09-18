@@ -1,104 +1,112 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Telemed Secure | Télémédecine sécurisée</title>
+```
+<title>Telemed Secure</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
+```
+
 </head>
 
-<body>
+<body class="page-authentification">
 
-<header>
+```
+<main class="conteneur-authentification">
 
-    <div class="entete-marque">
-        <div class="logo-telemed">+</div>
+    <section class="carte-authentification">
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Télémédecine simulée et sécurisée</p>
+        <div class="logo-telemed">
+            ✚
         </div>
-    </div>
 
-    <nav class="navigation">
-        <a href="index.html">Accueil</a>
-        <a href="connexion.html">Connexion</a>
-    </nav>
+        <h1>Telemed Secure</h1>
 
-</header>
-
-<main class="hero">
-
-    <section class="hero-contenu">
-
-        <p class="badge badge-admin">
-            🔐 Plateforme sécurisée
+        <p class="sous-titre">
+            Bienvenue
         </p>
 
-        <h2>
-            La télémédecine,
-            <span>pensée pour la sécurité.</span>
-        </h2>
 
-        <p>
-            Telemed Secure est une plateforme de télémédecine
-            simulée conçue pour démontrer la protection des
-            données médicales, l'authentification forte et
-            le contrôle des accès.
-        </p>
+        <form id="connexion-form">
 
-        <div class="hero-actions">
+            <div class="champ">
 
-            <button
-                type="button"
-                onclick="window.location.href='connexion.html'"
-            >
+                <label for="identifiant">
+                    Adresse e-mail ou numéro de téléphone
+                </label>
+
+                <input
+                    type="text"
+                    id="identifiant"
+                    name="identifiant"
+                    autocomplete="username"
+                    placeholder="Votre e-mail ou numéro"
+                    required
+                >
+
+            </div>
+
+
+            <div class="champ">
+
+                <label for="mot_de_passe">
+                    Mot de passe
+                </label>
+
+                <input
+                    type="password"
+                    id="mot_de_passe"
+                    name="mot_de_passe"
+                    autocomplete="current-password"
+                    placeholder="Votre mot de passe"
+                    required
+                >
+
+            </div>
+
+
+            <button type="submit">
                 Se connecter
             </button>
 
-        </div>
 
-    </section>
+            <p
+                id="message-connexion"
+                class="message">
+            </p>
 
-    <section class="hero-securite">
 
-        <h3>Protection intégrée</h3>
+            <div class="actions-secondaires-connexion">
 
-        <div class="securite-item">
-            <span class="icone-securite">🔐</span>
-            <span>Authentification et MFA</span>
-        </div>
+                <a
+                    href="mot-de-passe-oublie.html"
+                    class="lien-secondaire">
+                    Mot de passe oublié ?
+                </a>
 
-        <div class="securite-item">
-            <span class="icone-securite">🛡️</span>
-            <span>Contrôle d'accès RBAC</span>
-        </div>
+                <a
+                    href="inscription.html"
+                    class="lien-secondaire">
+                    Créer un compte
+                </a>
 
-        <div class="securite-item">
-            <span class="icone-securite">🔒</span>
-            <span>Chiffrement des dossiers</span>
-        </div>
+            </div>
 
-        <div class="securite-item">
-            <span class="icone-securite">📋</span>
-            <span>Journalisation des accès</span>
-        </div>
-
-        <div class="securite-item">
-            <span class="icone-securite">✓</span>
-            <span>Consentement du patient</span>
-        </div>
+        </form>
 
     </section>
 
 </main>
 
-<footer class="pied-page">
-    Telemed Secure — Projet académique de télémédecine simulée et sécurisée
-</footer>
+
+<script src="connexion.js"></script>
+```
 
 </body>
+
 </html>

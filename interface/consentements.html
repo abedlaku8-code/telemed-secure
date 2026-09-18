@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Consentements - Telemed Secure</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-tableau-bord">
+
+    <div class="conteneur-application">
+
+        <aside class="barre-laterale">
+
+            <div class="logo-application">
+                <h2>Telemed Secure</h2>
+                <p>Espace médical sécurisé</p>
+            </div>
+
+            <nav class="navigation-principale">
+
+                <a href="dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="dossiers.html">
+                    Dossiers
+                </a>
+
+                <a href="medecins.html" id="lien-mes-demandes">
+                    Mes demandes
+                </a>
+
+                <a href="notifications.html">
+                    Notifications
+                </a>
+
+                <a href="securite.html" id="lien-audit">
+                    Journal / Historique
+                </a>
+
+                <a href="#" id="lien-mes-medecins">
+                    Mes médecins
+                </a>
+
+                <a
+                    href="consentements.html"
+                    id="lien-consentements"
+                    class="actif"
+                >
+                    Consentements
+                </a>
+
+                <a
+                    href="parametres.html"
+                    id="lien-parametres"
+                >
+                    Paramètres
+                </a>
+
+                <a
+                    href="utilisateurs.html"
+                    id="lien-administration"
+                >
+                    Administration
+                </a>
+
+            </nav>
+
+            <div class="carte-securite">
+                <strong>🔐 Sécurité active</strong>
+                <span>Authentification MFA activée</span>
+            </div>
+
+            <button
+                id="bouton-deconnexion"
+                class="bouton-deconnexion"
+            >
+                Déconnexion
+            </button>
+
+        </aside>
+
+
+        <main class="contenu-principal">
+
+            <header class="en-tete-page">
+
+                <div class="bloc-titre-page">
+
+                    <button
+                        type="button"
+                        class="bouton-retour"
+                        onclick="history.back()"
+                    >
+                        ← Retour
+                    </button>
+
+                    <div>
+
+                        <h1>Consentements</h1>
+
+                        <p>
+                            Gérez les autorisations d'accès à vos informations médicales.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        id="initiales-utilisateur"
+                        class="initiales-utilisateur"
+                    >
+                        US
+                    </div>
+
+                    <div>
+
+                        <strong id="nom-utilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="role-utilisateur">
+                            Patient
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <section class="section-page">
+
+                <div class="en-tete-section">
+
+                    <div>
+
+                        <h2>Mes autorisations</h2>
+
+                        <p>
+                            Vous contrôlez les médecins autorisés à consulter vos données.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="liste-consentements"
+                    class="liste-consentements"
+                >
+                    Chargement des consentements...
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script src="navigation.js?v=5"></script>
+    <script src="consentements.js?v=1"></script>
+
+</body>
+
+</html>

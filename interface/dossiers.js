@@ -1,120 +1,106 @@
-const token = sessionStorage.getItem("access_token");
-
-if (!token) {
-    window.location.href = "connexion.html";
-}
-
-const message = document.getElementById("message-dossier");
-const resultat = document.getElementById("resultat-dossier");
-
-function seDeconnecter() {
-    sessionStorage.clear();
-    window.location.href = "connexion.html";
-}
+const bouton = document.getElementById("bouton-consulter-dossier");
+const message = document.getElementById("message-dossiers");
+const resultat = document.getElementById("grille-informations-dossier");
 
 async function consulterDossier() {
+    const token = sessionStorage.getItem("access_token");
 
-    message.textContent = "Chargement du dossier...";
-    message.className = "";
+    if (!token) {
+        window.location.href = "index.html";
+        return;
+    }
 
-    resultat.innerHTML = "";
-    resultat.style.display = "none";
+    bouton.disabled = true;
+    bouton.textContent = "Consultation en cours...";
+
+    message.textContent = "";
+    message.className = "message";
 
     try {
-
         const reponse = await fetch(
-            "http://127.0.0.1:8000/dossiers/1/4/8",
+            "http://127.0.0.1:8000/dossiers/1/2/8",
             {
                 method: "GET",
                 headers: {
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": "Bearer " + token
                 }
             }
         );
 
         const donnees = await reponse.json();
 
+        console.log("Réponse du serveur :", donnees);
+
         if (!reponse.ok) {
             throw new Error(
-                donnees.detail ||
-                "Accès au dossier refusé."
+                donnees.detail || "Consultation du dossier refusée."
             );
         }
 
-        let contenu = donnees.contenu;
+        // Le backend renvoie le contenu médical sous forme de texte JSON.
+        let contenu = {};
 
         try {
-            contenu = JSON.parse(contenu);
+            contenu = JSON.parse(donnees.contenu);
         } catch (erreur) {
-            contenu = {
-                contenu: contenu
-            };
+            console.error("Erreur lors de la lecture du contenu :", erreur);
+            throw new Error("Impossible de lire les informations du dossier.");
         }
 
         afficherDossier(contenu);
 
         message.textContent =
-            "Dossier médical chargé avec succès.";
-
-        message.className = "message-succes";
+            "Dossier consulté avec succès. L'accès a été journalisé.";
+        message.className = "message succes";
 
     } catch (erreur) {
+        console.error("Erreur de consultation :", erreur);
 
         message.textContent = erreur.message;
+        message.className = "message erreur";
 
-        message.className = "message-erreur";
-
-        resultat.style.display = "none";
+    } finally {
+        bouton.disabled = false;
+        bouton.textContent = "Consulter le dossier";
     }
 }
 
-function afficherDossier(dossier) {
+function afficherDossier(donnees) {
 
-    const noms = {
-        motif: "Motif",
-        antecedents: "Antécédents",
-        allergies: "Allergies",
-        traitements: "Traitements",
-        observations: "Observations",
-        contenu: "Contenu"
-    };
+    resultat.innerHTML = "";
 
-    let lignes = "";
-
-    Object.entries(dossier).forEach(
-        ([cle, valeur]) => {
-
-            lignes += `
-                <tr>
-                    <td>${noms[cle] || cle}</td>
-                    <td>${valeur ?? "Non renseigné"}</td>
-                </tr>
-            `;
+    const informations = [
+        {
+            titre: "Motif",
+            valeur: donnees.motif
+        },
+        {
+            titre: "Allergies",
+            valeur: donnees.allergies
+        },
+        {
+            titre: "Traitements",
+            valeur: donnees.traitements
         }
-    );
+    ];
 
-    resultat.innerHTML = `
-        <h3>Informations médicales</h3>
+    informations.forEach(function (information) {
 
-        <div class="tableau-conteneur">
+        const bloc = document.createElement("div");
+        bloc.className = "information-dossier";
 
-            <table class="tableau-dossier">
+        const titre = document.createElement("strong");
+        titre.textContent = information.titre;
 
-                <thead>
-                    <tr>
-                        <th>Information</th>
-                        <th>Donnée</th>
-                    </tr>
-                </thead>
+        const valeur = document.createElement("span");
+        valeur.textContent =
+            information.valeur || "Non renseigné";
 
-                <tbody>
-                    ${lignes}
-                </tbody>
+        bloc.appendChild(titre);
+        bloc.appendChild(valeur);
 
-            </table>
-
-        </div>
-    `;
-
-    resultat.style.display = "block";
+        resultat.appendChild(bloc);
+    });
 }
+
+window.consulterDossier = consulterDossier;

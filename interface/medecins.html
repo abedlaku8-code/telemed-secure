@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mes médecins - Telemed Secure</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-tableau-bord">
+
+<div class="application">
+
+    <aside class="barre-laterale">
+
+        <div class="logo-application">
+            <strong>Telemed Secure</strong>
+            <span>Espace médical sécurisé</span>
+        </div>
+
+        <nav class="navigation-principale">
+
+            <a href="dashboard.html" class="element-navigation">
+                <span>▣</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="dossiers.html" class="element-navigation">
+                <span>▤</span>
+                <span>Dossiers</span>
+            </a>
+
+            <a href="medecins.html" id="lien-mes-demandes">
+                Mes demandes
+            </a>
+
+             <a href="notifications.html" id="lien-notifications">
+                Notifications
+            </a>
+
+            <a href="medecins.html" class="element-navigation actif" id="lien-mes-medecins">
+                <span>⚕</span>
+                <span>Mes médecins</span>
+            </a>
+            
+            <a href="consentements.html" id="lien-consentements">
+                Consentements
+            </a>
+
+            <a href="securite.html" class="element-navigation" id="lien-audit">
+                <span>◷</span>
+                <span>Historique</span>
+            </a>
+            
+            <a href="parametres.html">
+                <span>⚙</span>
+                Paramètres
+            </a>
+
+            <a
+                href="utilisateurs.html"
+                class="element-navigation"
+                id="lien-administration"
+            >
+                <span>♙</span>
+                <span>Administration</span>
+            </a>
+
+        </nav>
+
+        <div class="bloc-securite-laterale">
+            <span>🔐</span>
+
+            <div>
+                <strong>Plateforme sécurisée</strong>
+                <small>MFA activée</small>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            class="bouton-deconnexion"
+            id="bouton-deconnexion"
+        >
+            <span>↪</span>
+            <span>Déconnexion</span>
+        </button>
+
+    </aside>
+
+
+    <main class="contenu-principal">
+
+        <header class="entete-principal">
+
+            <div>
+                <span class="sur-titre">ESPACE MÉDICAL</span>
+
+                <h1 id="titre-page-medecins">Mes médecins</h1>
+
+                <p id="sous-titre-page-medecins">
+                    Choisissez un médecin et envoyez une demande de prise en charge.
+                </p>
+            </div>
+
+            <div class="profil-utilisateur">
+
+                <div class="avatar-utilisateur" id="initiales-utilisateur">
+                    UT
+                </div>
+
+                <div>
+                    <strong id="nom-utilisateur">
+                        Utilisateur
+                    </strong>
+
+                    <span id="role-utilisateur">
+                        Patient
+                    </span>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <section class="carte-principale"  id="zone-choix-medecin">
+
+            <div class="entete-carte">
+
+                <div>
+                    <h2>Médecins disponibles</h2>
+
+                    <p>
+                        Les médecins affichés sont récupérés depuis la plateforme.
+                    </p>
+                </div>
+
+                <span class="badge-securite">
+                    🔐 Accès sécurisé
+                </span>
+
+            </div>
+
+
+            <div id="liste-medecins" class="grille-informations-dossier">
+
+                <div class="information-dossier">
+                    Chargement des médecins...
+                </div>
+
+            </div>
+
+
+            <div
+                id="zone-demande-medecin"
+                style="display: none;"
+            >
+
+                <div class="separateur-section"></div>
+
+                <h2>Envoyer une demande</h2>
+
+                <p id="medecin-selectionne">
+                    Médecin sélectionné
+                </p>
+
+                <textarea
+                    id="texte-demande"
+                    rows="4"
+                    placeholder="Message facultatif..."
+                ></textarea>
+
+                <button
+                    type="button"
+                    id="bouton-envoyer-demande"
+                    class="bouton-principal"
+                >
+                    Envoyer la demande
+                </button>
+
+                <div
+                    id="resultat-demande"
+                    class="message"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <section class="carte-principale">
+
+            <div class="entete-carte">
+
+                <div>
+                    <h2>Mes demandes</h2>
+
+                    <p>
+                        Suivez l'état de vos demandes de médecin.
+                    </p>
+                </div>
+
+            </div>
+
+            <div id="liste-demandes">
+
+                <div class="information-dossier">
+                    Chargement des demandes...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <footer class="pied-page">
+            <span>Telemed Secure</span>
+            <span>Plateforme de télémédecine simulée et sécurisée</span>
+        </footer>
+
+    </main>
+
+</div>
+
+<script src="navigation.js?v=2"></script>
+<script src="medecins.js"></script>
+
+</body>
+</html>

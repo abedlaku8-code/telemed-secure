@@ -1,99 +1,198 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sécurité & audit | Telemed Secure</title>
+    <title>Journal d'audit | Telemed Secure</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="page-interne">
 
-<header>
+    <header class="barre-navigation">
 
-    <div class="entete-marque">
+        <div class="marque">
 
-        <div class="logo-telemed">+</div>
+            <div class="icone-logo">✚</div>
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Centre de sécurité</p>
+            <div>
+                <strong>Telemed Secure</strong>
+                <span>Télémédecine sécurisée</span>
+            </div>
+
         </div>
 
-    </div>
+        <nav class="navigation-principale">
 
-    <nav class="navigation">
-        <a href="dashboard.html">Tableau de bord</a>
-        <a href="dossiers.html">Dossiers</a>
-        <a href="utilisateurs.html">Utilisateurs</a>
-        <a href="securite.html">Sécurité</a>
-    </nav>
+            <a href="dashboard.html">
+                Tableau de bord
+            </a>
 
-    <button
-        type="button"
-        class="bouton-deconnexion"
-        onclick="seDeconnecter()"
-    >
-        Se déconnecter
-    </button>
+            <a href="dossiers.html">
+                Dossiers
+            </a>
 
-</header>
+            <a href="utilisateurs.html" id="lien-administration">
+                Administration
+            </a>
 
-<main>
+            <a href="consentements.html" id="lien-consentements">
+                Consentements
+            </a>
 
-    <p class="badge badge-protege">
-        🛡️ Traçabilité active
-    </p>
+            <a href="securite.html" class="actif" id="lien-audit">
+                Audit
+            </a>
 
-    <h2>Journal de sécurité</h2>
-
-    <p>
-        Consultez les événements de sécurité et les
-        accès enregistrés sur la plateforme.
-    </p>
-
-    <section class="carte">
-
-        <div class="icone-module">
-            📋
-        </div>
-
-        <h3>Journal d'audit</h3>
-
-        <p>
-            Les consultations et actions sensibles sont
-            enregistrées afin d'assurer la traçabilité
-            des opérations.
-        </p>
+        </nav>
 
         <button
             type="button"
-            onclick="chargerJournalAudit()"
+            id="bouton-deconnexion"
+            class="bouton-deconnexion"
         >
-            Charger le journal d'audit
+            Déconnexion
         </button>
 
-        <p id="message-securite"></p>
+    </header>
 
-    </section>
 
-    <div
-        id="liste-audit"
-        class="audit-liste"
-    ></div>
+    <main class="conteneur-page">
 
-    <p>
-        <a href="dashboard.html">
-            ← Retour au tableau de bord
-        </a>
-    </p>
+        <section class="en-tete-page">
 
-</main>
+            <div>
 
-<script src="securite.js"></script>
+                <span class="sur-titre">
+                    GOUVERNANCE DE SÉCURITÉ
+                </span>
+
+                <h1>Journal d'audit</h1>
+
+                <p>
+                    Traçabilité des accès et des actions sensibles
+                    effectués sur la plateforme.
+                </p>
+
+            </div>
+
+            <span class="badge-securite">
+                🛡️ Accès administrateur
+            </span>
+
+        </section>
+
+
+        <section class="carte-audit">
+
+            <div class="entete-carte">
+
+                <div>
+
+                    <h2>Événements de sécurité</h2>
+
+                    <p>
+                        Les événements sont enregistrés par le
+                        serveur afin de garantir leur traçabilité.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="bouton-charger-audit"
+                    class="bouton-principal"
+                    onclick="chargerJournalAudit()"
+                >
+                    ↻ Actualiser
+                </button>
+
+            </div>
+
+
+            <div
+                class="resume-audit"
+                id="resume-audit"
+            >
+                Aucun événement chargé.
+            </div>
+
+
+            <p
+                id="message-securite"
+                class="message"
+                aria-live="polite"
+            ></p>
+
+
+            <div class="tableau-conteneur">
+
+                <table class="tableau-audit">
+
+                    <thead>
+
+                        <tr>
+                            <th>Action</th>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Ressource</th>
+                            <th>Adresse IP</th>
+                            <th>Date</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="liste-audit">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section class="note-securite">
+
+            <span class="icone-note">🔐</span>
+
+            <div>
+
+                <strong>
+                    Journalisation active
+                </strong>
+
+                <p>
+                    Les consultations et actions sensibles sont
+                    enregistrées automatiquement par le système.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="pied-page">
+
+        <p>
+            Telemed Secure — Projet académique de télémédecine
+            simulée et sécurisée
+        </p>
+
+        <span>
+            Données fictives et anonymisées
+        </span>
+
+    </footer>
+
+
+    <script src="navigation.js"></script>
+    <script src="securite.js"></script>
 
 </body>
 </html>

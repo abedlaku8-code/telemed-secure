@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,150 +9,485 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="page-tableau-bord">
 
-<header>
+    <div class="application">
 
-    <div class="entete-marque">
+        <!-- BARRE LATÉRALE -->
+        <aside class="barre-laterale">
 
-        <div class="logo-telemed">+</div>
+            <div class="identite-application">
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Espace sécurisé</p>
-        </div>
+                <div class="logo-telemed">
+                    ✚
+                </div>
+
+                <div>
+                    <h1>Telemed Secure</h1>
+                    <span>Espace médical sécurisé</span>
+                </div>
+
+            </div>
+
+
+            <!-- NAVIGATION -->
+            <nav class="navigation-principale">
+
+                <a href="dashboard.html" class="element-navigation actif">
+                    <span class="icone-navigation">⌂</span>
+                    <span>Tableau de bord</span>
+                </a>
+
+                <a href="dossiers.html" class="element-navigation">
+                    <span class="icone-navigation">▣</span>
+                    <span>Dossiers médicaux</span>
+                </a>
+
+                <a href="medecins.html" class="element-navigation" id="lien-mes-medecins">
+                    <span class="icone-navigation">♧</span>
+                    <span>Mes médecins</span>
+                </a>
+
+                 <a href="notifications.html" id="lien-notifications">
+                    Notifications
+                </a>
+                
+                <a href="consentements.html" id="lien-consentements">
+                    Consentements
+                </a>
+
+                <a href="securite.html" class="element-navigation" id="lien-audit">
+                    <span class="icone-navigation">◉</span>
+                    <span>Historique</span>
+                </a>
+
+                <a href="parametres.html">
+                    <span>⚙</span>
+                    Paramètres
+                </a>
+
+                <a href="utilisateurs.html"
+                   class="element-navigation"
+                   id="lien-administration">
+                    <span class="icone-navigation">♙</span>
+                    <span>Administration</span>
+                </a>
+
+            </nav>
+
+
+            <!-- BLOC SÉCURITÉ -->
+            <div class="bloc-securite-laterale">
+
+                <div class="icone-securite">
+                    🔐
+                </div>
+
+                <div>
+                    <strong>Sécurité active</strong>
+
+                    <span>
+                        MFA activée
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- DÉCONNEXION -->
+            <button
+                type="button"
+                id="bouton-deconnexion"
+                class="bouton-deconnexion"
+            >
+                <span>↪</span>
+                Déconnexion
+            </button>
+
+        </aside>
+
+
+        <!-- CONTENU PRINCIPAL -->
+        <main class="contenu-principal">
+
+            <!-- EN-TÊTE -->
+            <header class="entete-tableau-bord">
+
+                <div>
+
+                    <span class="petit-titre">
+                        ESPACE SÉCURISÉ
+                    </span>
+
+                    <h2 id="titre-bienvenue">
+                        Bonjour 👋
+                    </h2>
+
+                    <p>
+                        Voici un aperçu de votre espace médical.
+                    </p>
+
+                </div>
+
+
+                <div class="profil-utilisateur">
+
+                    <div class="avatar-utilisateur">
+                        <span id="initiales-utilisateur">U</span>
+                    </div>
+
+                    <div>
+                        <strong id="nom-utilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="role-utilisateur">
+                            Utilisateur
+                        </span>
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- CARTES RÉSUMÉ -->
+            <section class="grille-statistiques">
+
+                <article class="carte-statistique">
+
+                    <div class="icone-statistique">
+                        ▣
+                    </div>
+
+                    <div>
+                        <span>Dossiers médicaux</span>
+                        <strong id="nombre-dossiers">1</strong>
+                    </div>
+
+                </article>
+
+
+                <article class="carte-statistique">
+
+                    <div class="icone-statistique">
+                        ♧
+                    </div>
+
+                    <div>
+                        <span>Médecins autorisés</span>
+                        <strong id="nombre-medecins">2</strong>
+                    </div>
+
+                </article>
+
+
+                <article class="carte-statistique">
+
+                    <div class="icone-statistique">
+                        ♡
+                    </div>
+
+                    <div>
+                        <span>Consentements</span>
+                        <strong id="nombre-consentements">2</strong>
+                    </div>
+
+                </article>
+
+
+                <article class="carte-statistique securisee">
+
+                    <div class="icone-statistique">
+                        🔐
+                    </div>
+
+                    <div>
+                        <span>Protection</span>
+                        <strong>Active</strong>
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- CONTENU PRINCIPAL -->
+            <section class="grille-tableau-bord">
+
+                <!-- DOSSIER RÉCENT -->
+                <article class="carte-tableau dossier-recent">
+
+                    <div class="entete-carte">
+
+                        <div>
+
+                            <span class="etiquette-section">
+                                DOSSIER MÉDICAL
+                            </span>
+
+                            <h3>Dossier récent</h3>
+
+                        </div>
+
+                        <a href="dossiers.html" class="lien-action">
+                            Voir les dossiers →
+                        </a>
+
+                    </div>
+
+
+                    <div class="ligne-dossier">
+
+                        <div class="avatar-dossier">
+                            JK
+                        </div>
+
+                        <div class="informations-dossier">
+
+                            <strong>
+                                Jean K.
+                            </strong>
+
+                            <span>
+                                Dossier médical #8
+                            </span>
+
+                        </div>
+
+
+                        <div class="statut-dossier">
+                            <span class="point-statut"></span>
+                            Protégé
+                        </div>
+
+                    </div>
+
+
+                    <div class="informations-securite-dossier">
+
+                        <div>
+                            🔐
+                        </div>
+
+                        <p>
+                            Les informations médicales sont chiffrées
+                            et leur consultation est soumise aux
+                            autorisations de sécurité.
+                        </p>
+
+                    </div>
+
+                </article>
+
+
+                <!-- SÉCURITÉ -->
+                <article class="carte-tableau carte-securite">
+
+                    <div class="entete-carte">
+
+                        <div>
+
+                            <span class="etiquette-section">
+                                SÉCURITÉ
+                            </span>
+
+                            <h3>Protection du compte</h3>
+
+                        </div>
+
+                        <span class="badge-securite-active">
+                            Active
+                        </span>
+
+                    </div>
+
+
+                    <div class="ligne-securite">
+
+                        <div class="icone-ligne-securite">
+                            🔐
+                        </div>
+
+                        <div>
+                            <strong>Authentification MFA</strong>
+                            <span>Seconde vérification activée</span>
+                        </div>
+
+                        <span class="verification">
+                            ✓
+                        </span>
+
+                    </div>
+
+
+                    <div class="ligne-securite">
+
+                        <div class="icone-ligne-securite">
+                            🛡️
+                        </div>
+
+                        <div>
+                            <strong>Contrôle d'accès RBAC</strong>
+                            <span>Permissions selon votre rôle</span>
+                        </div>
+
+                        <span class="verification">
+                            ✓
+                        </span>
+
+                    </div>
+
+
+                    <div class="ligne-securite">
+
+                        <div class="icone-ligne-securite">
+                            ◉
+                        </div>
+
+                        <div>
+                            <strong>Journalisation</strong>
+                            <span>Les accès sont enregistrés</span>
+                        </div>
+
+                        <span class="verification">
+                            ✓
+                        </span>
+
+                    </div>
+
+
+                    <div class="ligne-securite">
+
+                        <div class="icone-ligne-securite">
+                            🔒
+                        </div>
+
+                        <div>
+                            <strong>Chiffrement</strong>
+                            <span>Données médicales protégées</span>
+                        </div>
+
+                        <span class="verification">
+                            ✓
+                        </span>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- ACCÈS RAPIDES -->
+            <section class="section-acces-rapides">
+
+                <div class="entete-section">
+
+                    <div>
+                        <span class="etiquette-section">
+                            ACCÈS RAPIDES
+                        </span>
+
+                        <h3>Actions principales</h3>
+                    </div>
+
+                </div>
+
+
+                <div class="grille-acces-rapides">
+
+                    <a href="dossiers.html" class="carte-acces">
+
+                        <div class="icone-acces">
+                            ▣
+                        </div>
+
+                        <div>
+                            <strong>Mes dossiers</strong>
+                            <span>
+                                Consulter les informations autorisées
+                            </span>
+                        </div>
+
+                        <span class="fleche-acces">
+                            →
+                        </span>
+
+                    </a>
+
+
+                    <a href="securite.html"
+                       class="carte-acces"
+                       id="acces-historique">
+
+                        <div class="icone-acces">
+                            ◉
+                        </div>
+
+                        <div>
+                            <strong>Historique</strong>
+                            <span>
+                                Consulter les événements de sécurité
+                            </span>
+                        </div>
+
+                        <span class="fleche-acces">
+                            →
+                        </span>
+
+                    </a>
+
+
+                    <a href="utilisateurs.html"
+                       class="carte-acces"
+                       id="acces-administration">
+
+                        <div class="icone-acces">
+                            ♙
+                        </div>
+
+                        <div>
+                            <strong>Administration</strong>
+                            <span>
+                                Gérer les accès et autorisations
+                            </span>
+                        </div>
+
+                        <span class="fleche-acces">
+                            →
+                        </span>
+
+                    </a>
+
+                </div>
+
+            </section>
+
+
+            <!-- PIED DE PAGE -->
+            <footer class="pied-page">
+
+                <span>
+                    Telemed Secure
+                </span>
+
+                <span>
+                    Données fictives et anonymisées
+                </span>
+
+                <span>
+                    © 2026
+                </span>
+
+            </footer>
+
+        </main>
 
     </div>
 
-    <nav class="navigation">
-        <a href="dashboard.html">Tableau de bord</a>
-        <a href="dossiers.html">Dossiers</a>
-        <a href="utilisateurs.html">Utilisateurs</a>
-        <a href="securite.html">Sécurité</a>
-    </nav>
 
-    <button
-        type="button"
-        class="bouton-deconnexion"
-        onclick="seDeconnecter()"
-    >
-        Se déconnecter
-    </button>
-
-</header>
-
-<main>
-
-    <p class="badge badge-protege">
-        ● Session sécurisée
-    </p>
-
-    <h2>Bienvenue sur votre tableau de bord</h2>
-
-    <p>
-        Gérez les services de télémédecine de manière
-        simple, sécurisée et confidentielle.
-    </p>
-
-    <div class="cartes">
-
-        <a
-            href="dossiers.html"
-            class="carte carte-module"
-        >
-
-            <div class="icone-module">
-                🩺
-            </div>
-
-            <h3>Dossiers médicaux</h3>
-
-            <p>
-                Consulter les dossiers médicaux simulés
-                selon vos autorisations.
-            </p>
-
-            <span>
-                Accéder aux dossiers →
-            </span>
-
-        </a>
-
-        <a
-            href="utilisateurs.html"
-            class="carte carte-module"
-        >
-
-            <div class="icone-module">
-                👥
-            </div>
-
-            <h3>Utilisateurs & rôles</h3>
-
-            <p>
-                Vérifier les permissions et les règles
-                de contrôle d'accès RBAC.
-            </p>
-
-            <span>
-                Vérifier les autorisations →
-            </span>
-
-        </a>
-
-        <a
-            href="securite.html"
-            class="carte carte-module"
-        >
-
-            <div class="icone-module">
-                🛡️
-            </div>
-
-            <h3>Sécurité & audit</h3>
-
-            <p>
-                Consulter les événements de sécurité
-                enregistrés sur la plateforme.
-            </p>
-
-            <span>
-                Consulter le journal →
-            </span>
-
-        </a>
-
-    </div>
-
-    <section class="carte" style="margin-top:30px;">
-
-        <h3>État de protection</h3>
-
-        <div class="securite-item">
-            <span class="icone-securite">✓</span>
-            <span>Authentification renforcée par MFA</span>
-        </div>
-
-        <div class="securite-item">
-            <span class="icone-securite">✓</span>
-            <span>Contrôle d'accès basé sur les rôles</span>
-        </div>
-
-        <div class="securite-item">
-            <span class="icone-securite">✓</span>
-            <span>Données médicales protégées</span>
-        </div>
-
-        <div class="securite-item">
-            <span class="icone-securite">✓</span>
-            <span>Journalisation des actions sensibles</span>
-        </div>
-
-    </section>
-
-</main>
-
-<script src="dashboard.js"></script>
+    <script src="navigation.js?v=2"></script>
 
 </body>
 </html>

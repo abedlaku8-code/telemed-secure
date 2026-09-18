@@ -1,89 +1,105 @@
 <!DOCTYPE html>
-<html lang="fr">
 
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Vérification MFA | Telemed Secure</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="page-authentification">
 
-<header>
+```
+<main class="conteneur-authentification">
 
-    <div class="entete-marque">
-        <div class="logo-telemed">+</div>
+    <section class="carte-authentification">
 
-        <div class="identite-site">
-            <h1>Telemed Secure</h1>
-            <p>Vérification de sécurité</p>
-        </div>
-    </div>
+        <div class="logo-telemed">✚</div>
 
-</header>
+        <h1>Telemed Secure</h1>
 
-<main>
+        <p class="sous-titre">
+            Vérification de sécurité
+        </p>
 
-    <section class="formulaire-carte mfa-page">
+        <div class="bloc-mfa">
 
-        <div style="text-align:center;">
-
-            <div class="icone-module" style="margin:0 auto 18px;">
+            <div class="icone-module">
                 🔐
             </div>
 
-            <h2>Vérification MFA</h2>
+            <div>
+                <h2>Authentification multifacteur</h2>
 
-            <p>
-                Une deuxième vérification est nécessaire
-                avant d'accéder à votre compte.
-            </p>
+                <p>
+                    Vérifiez votre identité pour continuer.
+                </p>
+            </div>
 
         </div>
 
-        <div class="mfa-introduction">
-            Entrez le code à 6 chiffres généré par votre
-            application d'authentification.
-        </div>
+        <form id="mfa-form">
 
-        <section style="margin-top:25px;">
+            <div class="champ">
 
-            <label for="code-authenticator">
-                Code Authenticator
-            </label>
+                <label for="code-mfa">
+                    Code de vérification
+                </label>
 
-            <input
-                class="mfa-code"
-                type="text"
-                id="code-authenticator"
-                maxlength="6"
-                minlength="6"
-                inputmode="numeric"
-                pattern="[0-9]{6}"
-                autocomplete="one-time-code"
-                placeholder="000000"
-            >
+                <input
+                    type="text"
+                    id="code-mfa"
+                    name="code-mfa"
+                    placeholder="000000"
+                    inputmode="numeric"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    autocomplete="one-time-code"
+                    required
+                >
 
-            <button
-                id="bouton-authenticator"
-                type="button"
-                style="width:100%; margin-top:15px;"
-            >
+            </div>
+
+            <button type="submit">
                 Vérifier le code
             </button>
 
-        </section>
+            <p id="message-mfa" class="message"></p>
 
-        <p id="message-mfa"></p>
+        </form>
+
+        <div class="bloc-protection">
+
+            <div class="icone-protection">
+                🛡️
+            </div>
+
+            <div>
+                <strong>Protection renforcée</strong>
+
+                <p>
+                    Une deuxième vérification est nécessaire
+                    pour accéder à votre espace sécurisé.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="lien-inscription">
+
+            <a href="index.html">
+                ← Retour à la connexion
+            </a>
+
+        </div>
 
     </section>
 
 </main>
 
-<script src="verification-mfa.js"></script>
+<script src="verification-mfa.js?v=2"></script>
+
 
 </body>
 </html>

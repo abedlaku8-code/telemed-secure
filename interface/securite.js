@@ -1,30 +1,58 @@
 const token = sessionStorage.getItem("access_token");
 
+const message = document.getElementById("message-securite");
+const liste = document.getElementById("liste-audit");
+const resume = document.getElementById("resume-audit");
+const bouton = document.getElementById("bouton-charger-audit");
+
+
+/*
+ * Vérification de la session.
+ */
 if (!token) {
-    window.location.href = "connexion.html";
+    window.location.href = "index.html";
 }
 
-const message = document.getElementById(
-    "message-securite"
-);
 
-const liste = document.getElementById(
-    "liste-audit"
-);
+/*
+ * Protection contre l'injection HTML.
+ *
+ * Les données du journal proviennent du serveur.
+ * Elles sont donc affichées avec textContent.
+ */
+function creerCellule(valeur) {
 
-function seDeconnecter() {
-    sessionStorage.clear();
-    window.location.href = "connexion.html";
+    const cellule = document.createElement("td");
+
+    cellule.textContent =
+        valeur === null ||
+        valeur === undefined ||
+        valeur === ""
+            ? "—"
+            : String(valeur);
+
+    return cellule;
 }
 
+
+/*
+ * Chargement du journal d'audit.
+ */
 async function chargerJournalAudit() {
 
     message.textContent =
         "Chargement du journal d'audit...";
 
-    message.className = "";
+    message.className =
+        "message chargement";
 
     liste.innerHTML = "";
+
+    resume.textContent =
+        "Chargement en cours...";
+
+    bouton.disabled = true;
+
 
     try {
 
@@ -32,13 +60,16 @@ async function chargerJournalAudit() {
             "http://127.0.0.1:8000/audit",
             {
                 method: "GET",
+
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             }
         );
 
+
         const donnees = await reponse.json();
+
 
         if (!reponse.ok) {
 
@@ -48,84 +79,111 @@ async function chargerJournalAudit() {
             );
         }
 
-        if (donnees.evenements.length === 0) {
 
-            liste.innerHTML = `
-                <section class="carte">
-                    <h3>Aucun événement</h3>
-                    <p>
-                        Aucun événement d'audit n'est actuellement enregistré.
-                    </p>
-                </section>
-            `;
+        const evenements =
+            Array.isArray(donnees.evenements)
+                ? donnees.evenements
+                : [];
 
-        } else {
 
-            donnees.evenements.forEach(
-                function (evenement) {
+        /*
+         * Aucun événement.
+         */
+        if (evenements.length === 0) {
 
-                    const carte =
-                        document.createElement("article");
+            resume.textContent =
+                "Aucun événement enregistré.";
 
-                    carte.className =
-                        "audit-evenement";
+            message.textContent =
+                "Le journal d'audit ne contient aucun événement.";
 
-                    carte.innerHTML = `
+            message.className =
+                "message information";
 
-                        <div class="audit-icone">
-                            🔐
-                        </div>
-
-                        <div class="audit-contenu">
-
-                            <h3>
-                                ${evenement.action}
-                            </h3>
-
-                            <p>
-                                <strong>Utilisateur :</strong>
-                                ${evenement.email}
-                            </p>
-
-                            <p>
-                                <strong>Rôle :</strong>
-                                ${evenement.role}
-                            </p>
-
-                            <p>
-                                <strong>Ressource :</strong>
-                                ${evenement.ressource || "Non précisée"}
-                            </p>
-
-                            <p>
-                                <strong>Adresse IP :</strong>
-                                ${evenement.adresse_ip || "Non précisée"}
-                            </p>
-
-                        </div>
-
-                        <div class="audit-date">
-                            ${evenement.date_action}
-                        </div>
-                    `;
-
-                    liste.appendChild(carte);
-                }
-            );
+            return;
         }
 
+
+        /*
+         * Création des lignes du tableau.
+         */
+        evenements.forEach(function (evenement) {
+
+            const ligne =
+                document.createElement("tr");
+
+
+            ligne.appendChild(
+                creerCellule(evenement.action)
+            );
+
+
+            ligne.appendChild(
+                creerCellule(evenement.email)
+            );
+
+
+            ligne.appendChild(
+                creerCellule(evenement.role)
+            );
+
+
+            ligne.appendChild(
+                creerCellule(evenement.ressource)
+            );
+
+
+            ligne.appendChild(
+                creerCellule(evenement.adresse_ip)
+            );
+
+
+            ligne.appendChild(
+                creerCellule(evenement.date_action)
+            );
+
+
+            liste.appendChild(ligne);
+
+        });
+
+
+        /*
+         * Résumé du nombre d'événements.
+         */
+        resume.textContent =
+            `${donnees.nombre || evenements.length} événement(s) d'audit chargé(s).`;
+
+
         message.textContent =
-            `${donnees.nombre} événement(s) d'audit chargé(s).`;
+            "Journal d'audit chargé avec succès.";
 
         message.className =
-            "message-succes";
+            "message succes";
+
 
     } catch (erreur) {
+
+        console.error(
+            "Erreur lors du chargement du journal d'audit :",
+            erreur
+        );
+
 
         message.textContent =
             erreur.message;
 
         message.className =
-            "message-erreur";
+            "message erreur";
+
+
+        resume.textContent =
+            "Journal indisponible.";
+
+    } finally {
+
+        bouton.disabled = false;
+
     }
+
 }
