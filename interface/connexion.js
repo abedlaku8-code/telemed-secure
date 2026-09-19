@@ -25,7 +25,7 @@ formulaire.addEventListener("submit", async function (event) {
     message.className = "message chargement";
 
     try {
-        const reponse = await fetch("http://127.0.0.1:8000/login", {
+        const reponse = await fetch("https://telemed-secure-api.onrender.com/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
