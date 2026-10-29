@@ -1,116 +1,96 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Connexion | Telemed Secure</title>
 
-<title>Connexion | Telemed Secure</title>
-
-<link rel="stylesheet" href="style.css">
-
-
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="page-authentification">
 
-<header>
+    <main class="conteneur-authentification">
 
+        <section class="carte-authentification">
 
-<div class="entete-marque">
-    <div class="logo-telemed">+</div>
+            <div class="logo-telemed">
+                ✚
+            </div>
 
-    <div class="identite-site">
-        <h1>Telemed Secure</h1>
-        <p>Accès sécurisé</p>
-    </div>
-</div>
+            <h1>Telemed Secure</h1>
 
-<nav class="navigation">
-    <a href="index.html">Accueil</a>
-</nav>
+            <p class="sous-titre">
+                Accès sécurisé
+            </p>
 
+            <form id="connexion-form">
 
-</header>
+                <div class="champ">
 
-<main>
+                    <label for="identifiant">
+                        Adresse e-mail ou numéro de téléphone
+                    </label>
 
+                    <input
+                        type="text"
+                        id="identifiant"
+                        name="identifiant"
+                        autocomplete="username"
+                        placeholder="Votre e-mail ou numéro"
+                        required
+                    >
 
-<section class="formulaire-carte">
+                </div>
 
-    <div style="text-align:center;">
+                <div class="champ">
 
-        <div class="icone-module" style="margin:0 auto 18px;">
-            🔐
-        </div>
+                    <label for="mot_de_passe">
+                        Mot de passe
+                    </label>
 
-        <h2>Bienvenue</h2>
+                    <input
+                        type="password"
+                        id="mot_de_passe"
+                        name="mot_de_passe"
+                        autocomplete="current-password"
+                        placeholder="Votre mot de passe"
+                        required
+                    >
 
-        <p>
-            Connectez-vous pour accéder à votre espace sécurisé.
-        </p>
+                </div>
 
-    </div>
+                <button type="submit">
+                    Se connecter
+                </button>
 
-    <form id="connexion-form">
+                <p id="message-connexion" class="message"></p>
 
-        <label for="email">
-            Adresse e-mail ou numéro de téléphone
-        </label>
+                <div class="actions-secondaires-connexion">
 
-        <input
-            type="text"
-            id="email"
-            name="email"
-            placeholder="exemple@telemed.local"
-            autocomplete="username"
-            required
-        >
+                    <a
+                        href="mot-de-passe-oublie.html"
+                        class="lien-secondaire">
+                        Mot de passe oublié ?
+                    </a>
 
-        <label for="mot_de_passe">
-            Mot de passe
-        </label>
+                    <a
+                        href="inscription.html"
+                        class="lien-secondaire">
+                        Créer un compte
+                    </a>
 
-        <input
-            type="password"
-            id="mot_de_passe"
-            name="mot_de_passe"
-            placeholder="Votre mot de passe"
-            autocomplete="current-password"
-            required
-        >
+                </div>
 
-        <button type="submit">
-            Se connecter
-        </button>
+            </form>
 
-        <div class="actions-secondaires-connexion">
+        </section>
 
-            <a
-                href="mot-de-passe-oublie.html"
-                class="lien-secondaire">
-                Mot de passe oublié ?
-            </a>
+    </main>
 
-            <a
-                href="inscription.html"
-                class="lien-secondaire">
-                Créer un compte
-            </a>
-
-        </div>
-
-        <p id="message-connexion"></p>
-
-    </form>
-
-</section>
-
-</main>
-
-<script src="connexion.js"></script>
+    <script src="connexion.js"></script>
 
 </body>
 </html>

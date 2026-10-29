@@ -1,10 +1,15 @@
-
+﻿
 import os
 import secrets
 import time
+import hashlib
+import hmac
+import smtplib
+import ssl
+
+from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 
-import pyotp
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -34,12 +39,54 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEMO_EMAIL = os.getenv("DEMO_EMAIL")
 DEMO_PASSWORD_HASH = os.getenv("DEMO_PASSWORD_HASH")
-TOTP_SECRET = os.getenv("TOTP_SECRET")
+
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+EMAIL_FROM = os.getenv("EMAIL_FROM")
 
 ALGORITHM = "HS256"
 DUREE_CHALLENGE = 300
+MAX_TENTATIVES_MFA = 5
 
 defis_mfa = {}
+
+def envoyer_code_mfa(email_destinataire: str, code: str) -> None:
+    """Envoie le code MFA temporaire par e-mail."""
+
+    if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
+        raise RuntimeError("Configuration SMTP incomplÃ¨te.")
+
+    message = EmailMessage()
+    message["Subject"] = "Votre code de vÃ©rification Telemed Secure"
+    message["From"] = EMAIL_FROM
+    message["To"] = email_destinataire
+    message.set_content(
+        f"""Bonjour,
+
+Votre code de vÃ©rification Telemed Secure est : {code}
+
+Ce code expire dans 5 minutes et ne peut Ãªtre utilisÃ© qu'une seule fois.
+
+Si vous n'Ãªtes pas Ã  l'origine de cette demande, ignorez ce message.
+
+L'Ã©quipe Telemed Secure"""
+    )
+
+    contexte_ssl = ssl.create_default_context()
+
+    with smtplib.SMTP(
+        SMTP_HOST,
+        SMTP_PORT,
+        timeout=15
+    ) as serveur:
+        serveur.ehlo()
+        serveur.starttls(context=contexte_ssl)
+        serveur.ehlo()
+        serveur.login(SMTP_USERNAME, SMTP_PASSWORD)
+        serveur.send_message(message)
+
 
 
 if not SECRET_KEY:
@@ -57,10 +104,6 @@ if not DEMO_PASSWORD_HASH:
         "DEMO_PASSWORD_HASH absent du fichier .env"
     )
 
-if not TOTP_SECRET:
-    raise RuntimeError(
-        "TOTP_SECRET absent du fichier .env"
-    )
 
 
 # ============================================================
@@ -102,7 +145,7 @@ def verifier_role(
     role: str,
     permission: str
 ):
-    """Vérifie qu'un rôle possède une permission."""
+    """VÃ©rifie qu'un rÃ´le possÃ¨de une permission."""
 
     if not a_permission(
         role,
@@ -110,7 +153,7 @@ def verifier_role(
     ):
         raise HTTPException(
             status_code=403,
-            detail="Accès interdit : permission insuffisante"
+            detail="AccÃ¨s interdit : permission insuffisante"
         )
 
 
@@ -124,8 +167,8 @@ def obtenir_utilisateur_token(
     )
 ):
     """
-    Vérifie le JWT et récupère l'identité
-    et le rôle depuis PostgreSQL.
+    VÃ©rifie le JWT et rÃ©cupÃ¨re l'identitÃ©
+    et le rÃ´le depuis PostgreSQL.
     """
 
     token = credentials.credentials
@@ -167,7 +210,7 @@ def obtenir_utilisateur_token(
         if not utilisateur:
             raise HTTPException(
                 status_code=401,
-                detail="Utilisateur non autorisé"
+                detail="Utilisateur non autorisÃ©"
             )
 
         (
@@ -180,7 +223,7 @@ def obtenir_utilisateur_token(
         if not actif:
             raise HTTPException(
                 status_code=403,
-                detail="Compte désactivé"
+                detail="Compte dÃ©sactivÃ©"
             )
 
         return {
@@ -195,7 +238,7 @@ def obtenir_utilisateur_token(
     except Exception:
         raise HTTPException(
             status_code=401,
-            detail="Token invalide ou expiré"
+            detail="Token invalide ou expirÃ©"
         )
 
 
@@ -289,7 +332,7 @@ def accueil():
 
     return {
         "message": "API Telemed Secure",
-        "statut": "API opérationnelle"
+        "statut": "API opÃ©rationnelle"
     }
 
 
@@ -324,7 +367,7 @@ def creer_utilisateur(
     if not prenom or len(prenom) < 2:
         raise HTTPException(
             status_code=400,
-            detail="Le prénom est obligatoire."
+            detail="Le prÃ©nom est obligatoire."
         )
 
     if (
@@ -339,7 +382,7 @@ def creer_utilisateur(
     if not telephone or len(telephone) < 8:
         raise HTTPException(
             status_code=400,
-            detail="Numéro de téléphone invalide."
+            detail="NumÃ©ro de tÃ©lÃ©phone invalide."
         )
 
     if len(data.password) < 8:
@@ -347,12 +390,12 @@ def creer_utilisateur(
             status_code=400,
             detail=(
                 "Le mot de passe doit contenir "
-                "au moins 8 caractères."
+                "au moins 8 caractÃ¨res."
             )
         )
 
     # --------------------------------------------------------
-    # LE COMPTE ADMIN NE PEUT PAS ÊTRE CREE PUBLIQUEMENT
+    # LE COMPTE ADMIN NE PEUT PAS ÃŠTRE CREE PUBLIQUEMENT
     # --------------------------------------------------------
 
     if role not in {
@@ -362,7 +405,7 @@ def creer_utilisateur(
         raise HTTPException(
             status_code=400,
             detail=(
-                "Le rôle doit être patient ou medecin."
+                "Le rÃ´le doit Ãªtre patient ou medecin."
             )
         )
 
@@ -395,8 +438,8 @@ def creer_utilisateur(
                     status_code=409,
                     detail=(
                         "Cette adresse email "
-                        "ou ce numéro de téléphone "
-                        "est déjà utilisé."
+                        "ou ce numÃ©ro de tÃ©lÃ©phone "
+                        "est dÃ©jÃ  utilisÃ©."
                     )
                 )
 
@@ -470,7 +513,7 @@ def creer_utilisateur(
     )
 
     return {
-        "message": "Compte créé avec succès.",
+        "message": "Compte crÃ©Ã© avec succÃ¨s.",
         "utilisateur_id": utilisateur[0],
         "nom": utilisateur[1],
         "prenom": utilisateur[2],
@@ -480,7 +523,7 @@ def creer_utilisateur(
     }
 
 # ============================================================
-# RÉINITIALISATION DU MOT DE PASSE — DEMANDE
+# RÃ‰INITIALISATION DU MOT DE PASSE â€” DEMANDE
 # ============================================================
 
 @application.post("/mot-de-passe-oublie")
@@ -514,14 +557,14 @@ def demander_reinitialisation(
 
             utilisateur = cur.fetchone()
 
-            # Réponse volontairement identique si le compte
-            # n'existe pas afin d'éviter l'énumération des comptes.
+            # RÃ©ponse volontairement identique si le compte
+            # n'existe pas afin d'Ã©viter l'Ã©numÃ©ration des comptes.
             if not utilisateur:
 
                 return {
                     "message": (
                         "Si un compte correspondant existe, "
-                        "une procédure de réinitialisation sera disponible."
+                        "une procÃ©dure de rÃ©initialisation sera disponible."
                     )
                 }
 
@@ -535,7 +578,7 @@ def demander_reinitialisation(
                 return {
                     "message": (
                         "Si un compte correspondant existe, "
-                        "une procédure de réinitialisation sera disponible."
+                        "une procÃ©dure de rÃ©initialisation sera disponible."
                     )
                 }
 
@@ -554,7 +597,7 @@ def demander_reinitialisation(
             )
 
             # ------------------------------------------------
-            # CRÉATION DU NOUVEAU JETON
+            # CRÃ‰ATION DU NOUVEAU JETON
             # ------------------------------------------------
 
             jeton = secrets.token_urlsafe(32)
@@ -597,26 +640,26 @@ def demander_reinitialisation(
             )
 
     # --------------------------------------------------------
-    # MODE DÉMONSTRATION
+    # MODE DÃ‰MONSTRATION
     # --------------------------------------------------------
     #
-    # Pour l'instant, aucun e-mail réel n'est envoyé.
-    # Le jeton est retourné uniquement pour permettre
-    # les tests de la fonctionnalité en environnement
-    # académique de démonstration.
+    # Pour l'instant, aucun e-mail rÃ©el n'est envoyÃ©.
+    # Le jeton est retournÃ© uniquement pour permettre
+    # les tests de la fonctionnalitÃ© en environnement
+    # acadÃ©mique de dÃ©monstration.
     #
 
     return {
         "message": (
             "Si un compte correspondant existe, "
-            "une procédure de réinitialisation sera disponible."
+            "une procÃ©dure de rÃ©initialisation sera disponible."
         ),
         "jeton_demo": jeton
     }
 
 
 # ============================================================
-# RÉINITIALISATION DU MOT DE PASSE — VALIDATION
+# RÃ‰INITIALISATION DU MOT DE PASSE â€” VALIDATION
 # ============================================================
 
 @application.post("/reinitialiser-mot-de-passe")
@@ -635,7 +678,7 @@ def reinitialiser_mot_de_passe(
     if len(nouveau_mot_de_passe) < 8:
         raise HTTPException(
             status_code=400,
-            detail="Le nouveau mot de passe doit contenir au moins 8 caractères"
+            detail="Le nouveau mot de passe doit contenir au moins 8 caractÃ¨res"
         )
 
     with get_connection() as conn:
@@ -691,7 +734,7 @@ def reinitialiser_mot_de_passe(
 
                 raise HTTPException(
                     status_code=400,
-                    detail="Jeton invalide ou expiré"
+                    detail="Jeton invalide ou expirÃ©"
                 )
 
             jeton_id = jeton_trouve[0]
@@ -706,7 +749,7 @@ def reinitialiser_mot_de_passe(
             )
 
             # ------------------------------------------------
-            # MISE À JOUR DU MOT DE PASSE
+            # MISE Ã€ JOUR DU MOT DE PASSE
             # ------------------------------------------------
 
             cur.execute(
@@ -746,7 +789,7 @@ def reinitialiser_mot_de_passe(
             )
 
     return {
-        "message": "Mot de passe réinitialisé avec succès."
+        "message": "Mot de passe rÃ©initialisÃ© avec succÃ¨s."
     }
 
 
@@ -807,7 +850,7 @@ def login(
 
         raise HTTPException(
             status_code=403,
-            detail="Compte désactivé"
+            detail="Compte dÃ©sactivÃ©"
         )
 
     if not pwd_context.verify(
@@ -824,31 +867,44 @@ def login(
     # CREATION DU DEFI MFA
     # --------------------------------------------------------
 
-    mfa_challenge = secrets.token_urlsafe(
-        32
-    )
+
+    mfa_challenge = secrets.token_urlsafe(32)
+    code_mfa = f"{secrets.randbelow(1_000_000):06d}"
 
     defis_mfa[mfa_challenge] = {
-
         "utilisateur_id": utilisateur_id,
-
         "email": email_db,
-
         "role": role,
-
-        "date_creation": time.time()
+        "date_creation": time.time(),
+        "code_hash": hashlib.sha256(code_mfa.encode()).hexdigest(),
+        "tentatives": 0
     }
+
+
+    try:
+        debut_envoi = time.perf_counter()
+        envoyer_code_mfa(email_db, code_mfa)
+        print(
+            f"Temps d'envoi Gmail : "
+            f"{time.perf_counter() - debut_envoi:.2f} secondes"
+        )
+
+    except Exception as erreur:
+        defis_mfa.pop(mfa_challenge, None)
+
+        print(f"Erreur d'envoi MFA : {type(erreur).__name__}")
+
+        raise HTTPException(
+            status_code=503,
+            detail="Impossible d'envoyer le code de vÃ©rification. RÃ©essayez plus tard."
+        )
 
     return {
-
-        "message": (
-            "Première étape réussie"
-        ),
-
+        "message": "PremiÃ¨re Ã©tape rÃ©ussie",
         "mfa_requis": True,
-
         "mfa_challenge": mfa_challenge
     }
+
 
 
 # ============================================================
@@ -856,99 +912,82 @@ def login(
 # ============================================================
 
 @application.post("/mfa/authenticator")
-def verifier_authenticator(
-    data: MFARequest
-):
 
-    defi = defis_mfa.get(
-        data.mfa_challenge
-    )
+def verifier_authenticator(data: MFARequest):
+    defi = defis_mfa.get(data.mfa_challenge)
 
     if not defi:
-
         raise HTTPException(
             status_code=401,
-            detail=(
-                "Session MFA invalide "
-                "ou expirée"
-            )
+            detail="Session MFA invalide ou expirÃ©e"
         )
 
-    if (
-        time.time()
-        - defi["date_creation"]
-        > DUREE_CHALLENGE
-    ):
-
-        del defis_mfa[
-            data.mfa_challenge
-        ]
-
+    if time.time() - defi["date_creation"] > DUREE_CHALLENGE:
+        defis_mfa.pop(data.mfa_challenge, None)
         raise HTTPException(
             status_code=401,
-            detail="Session MFA expirée"
+            detail="Code MFA expirÃ©. Recommencez la connexion."
         )
 
-    totp = pyotp.TOTP(
-        TOTP_SECRET
-    )
+    if not data.code.isdigit() or len(data.code) != 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Le code doit contenir exactement 6 chiffres."
+        )
 
-    if not totp.verify(
-        data.code
-    ):
+    defi["tentatives"] += 1
+
+    if defi["tentatives"] > MAX_TENTATIVES_MFA:
+        defis_mfa.pop(data.mfa_challenge, None)
+        raise HTTPException(
+            status_code=429,
+            detail="Nombre maximal de tentatives atteint. Recommencez la connexion."
+        )
+
+    code_hash_recu = hashlib.sha256(data.code.encode()).hexdigest()
+
+    if not hmac.compare_digest(code_hash_recu, defi["code_hash"]):
+        if defi["tentatives"] >= MAX_TENTATIVES_MFA:
+            defis_mfa.pop(data.mfa_challenge, None)
+            raise HTTPException(
+                status_code=429,
+                detail="Nombre maximal de tentatives atteint. Recommencez la connexion."
+            )
 
         raise HTTPException(
             status_code=401,
-            detail=(
-                "Code Authenticator "
-                "incorrect ou expiré"
-            )
+            detail="Code de vÃ©rification incorrect."
         )
 
     with get_connection() as conn:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
-                SELECT
-                    id,
-                    email,
-                    role,
-                    actif
+                SELECT id, email, role, actif
                 FROM utilisateurs
                 WHERE email = %s
                 """,
                 (defi["email"],)
             )
-
             utilisateur = cur.fetchone()
 
     if not utilisateur:
-
+        defis_mfa.pop(data.mfa_challenge, None)
         raise HTTPException(
             status_code=401,
-            detail="Utilisateur non autorisé"
+            detail="Utilisateur non autorisÃ©."
         )
 
-    (
-        utilisateur_id,
-        email,
-        role,
-        actif
-    ) = utilisateur
+    utilisateur_id, email, role, actif = utilisateur
 
     if not actif:
-
+        defis_mfa.pop(data.mfa_challenge, None)
         raise HTTPException(
             status_code=403,
-            detail="Compte désactivé"
+            detail="Compte dÃ©sactivÃ©."
         )
 
-    date_expiration = (
-        datetime.now(timezone.utc)
-        + timedelta(hours=1)
-    )
+    date_expiration = datetime.now(timezone.utc) + timedelta(hours=1)
 
     token = jwt.encode(
         {
@@ -960,22 +999,16 @@ def verifier_authenticator(
         algorithm=ALGORITHM
     )
 
-    del defis_mfa[
-        data.mfa_challenge
-    ]
+    # Suppression du dÃ©fi : le code ne peut plus Ãªtre rÃ©utilisÃ©.
+    defis_mfa.pop(data.mfa_challenge, None)
 
     return {
-
-        "message": (
-            "Authentification MFA réussie"
-        ),
-
-        "acces": "autorisé",
-
+        "message": "Authentification MFA rÃ©ussie",
+        "acces": "autorisÃ©",
         "access_token": token,
-
         "token_type": "bearer"
     }
+
 
 
 # ============================================================
@@ -998,7 +1031,7 @@ def espace_admin(
 
     return {
 
-        "message": "Accès autorisé",
+        "message": "AccÃ¨s autorisÃ©",
 
         "role": role,
 
@@ -1027,7 +1060,7 @@ def acces_medecin_admin(
     )
 
     return {
-        "message": "Accès autorisé",
+        "message": "AccÃ¨s autorisÃ©",
         "role": role
     }
 
@@ -1128,7 +1161,7 @@ def creer_demande_medecin(
 
                 raise HTTPException(
                     status_code=404,
-                    detail="Médecin introuvable"
+                    detail="MÃ©decin introuvable"
                 )
 
             cur.execute(
@@ -1154,8 +1187,8 @@ def creer_demande_medecin(
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        "Une demande est déjà "
-                        "en attente pour ce médecin"
+                        "Une demande est dÃ©jÃ  "
+                        "en attente pour ce mÃ©decin"
                     )
                 )
 
@@ -1210,7 +1243,7 @@ def creer_demande_medecin(
                     "DEMANDE_MEDECIN",
                     (
                         "Un patient souhaite vous "
-                        "choisir comme médecin principal."
+                        "choisir comme mÃ©decin principal."
                     )
                 )
             )
@@ -1227,7 +1260,7 @@ def creer_demande_medecin(
     return {
 
         "message": (
-            "Demande envoyée au médecin"
+            "Demande envoyÃ©e au mÃ©decin"
         ),
 
         "demande_id": demande[0],
@@ -1260,7 +1293,7 @@ def repondre_demande_medecin(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux médecins"
+            detail="AccÃ¨s rÃ©servÃ© aux mÃ©decins"
         )
 
     if demande.decision not in {
@@ -1271,7 +1304,7 @@ def repondre_demande_medecin(
         raise HTTPException(
             status_code=400,
             detail=(
-                "La décision doit être "
+                "La dÃ©cision doit Ãªtre "
                 "ACCEPTEE ou REFUSEE"
             )
         )
@@ -1329,7 +1362,7 @@ def repondre_demande_medecin(
                 raise HTTPException(
                     status_code=403,
                     detail=(
-                        "Cette demande ne vous est pas destinée"
+                        "Cette demande ne vous est pas destinÃ©e"
                     )
                 )
 
@@ -1338,7 +1371,7 @@ def repondre_demande_medecin(
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        "Cette demande a déjà été traitée"
+                        "Cette demande a dÃ©jÃ  Ã©tÃ© traitÃ©e"
                     )
                 )
 
@@ -1376,8 +1409,8 @@ def repondre_demande_medecin(
                     (
                         patient_id,
                         (
-                            "Votre demande de médecin "
-                            "principal a été refusée."
+                            "Votre demande de mÃ©decin "
+                            "principal a Ã©tÃ© refusÃ©e."
                         )
                     )
                 )
@@ -1392,7 +1425,7 @@ def repondre_demande_medecin(
 
                 return {
 
-                    "message": "Demande refusée",
+                    "message": "Demande refusÃ©e",
 
                     "demande_id": (
                         demande.demande_id
@@ -1427,8 +1460,8 @@ def repondre_demande_medecin(
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        "Le patient possède déjà "
-                        "un médecin principal actif"
+                        "Le patient possÃ¨de dÃ©jÃ  "
+                        "un mÃ©decin principal actif"
                     )
                 )
 
@@ -1489,11 +1522,11 @@ def repondre_demande_medecin(
                 (
                     patient_id,
                     (
-                        "Votre demande de médecin "
-                        "principal a été acceptée. "
-                        f"Rendez-vous prévu le "
+                        "Votre demande de mÃ©decin "
+                        "principal a Ã©tÃ© acceptÃ©e. "
+                        f"Rendez-vous prÃ©vu le "
                         f"{demande.date_rendez_vous} "
-                        f"à {demande.heure_rendez_vous}."
+                        f"Ã  {demande.heure_rendez_vous}."
                     )
                 )
             )
@@ -1509,8 +1542,8 @@ def repondre_demande_medecin(
     return {
 
         "message": (
-            "Demande acceptée et "
-            "rendez-vous enregistré"
+            "Demande acceptÃ©e et "
+            "rendez-vous enregistrÃ©"
         ),
 
         "demande_id": demande.demande_id,
@@ -1545,7 +1578,7 @@ def recommander_specialiste(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux médecins"
+            detail="AccÃ¨s rÃ©servÃ© aux mÃ©decins"
         )
 
     medecin_principal_id = utilisateur["id"]
@@ -1576,8 +1609,8 @@ def recommander_specialiste(
                 raise HTTPException(
                     status_code=403,
                     detail=(
-                        "Ce médecin n'est pas "
-                        "le médecin principal de ce patient"
+                        "Ce mÃ©decin n'est pas "
+                        "le mÃ©decin principal de ce patient"
                     )
                 )
 
@@ -1602,7 +1635,7 @@ def recommander_specialiste(
 
                 raise HTTPException(
                     status_code=404,
-                    detail="Spécialiste introuvable"
+                    detail="SpÃ©cialiste introuvable"
                 )
 
             if (
@@ -1613,8 +1646,8 @@ def recommander_specialiste(
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        "L'utilisateur sélectionné "
-                        "n'est pas un médecin actif"
+                        "L'utilisateur sÃ©lectionnÃ© "
+                        "n'est pas un mÃ©decin actif"
                     )
                 )
 
@@ -1626,8 +1659,8 @@ def recommander_specialiste(
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        "Le médecin principal "
-                        "ne peut pas se recommander lui-même"
+                        "Le mÃ©decin principal "
+                        "ne peut pas se recommander lui-mÃªme"
                     )
                 )
 
@@ -1653,7 +1686,7 @@ def recommander_specialiste(
                     status_code=409,
                     detail=(
                         "Une recommandation est "
-                        "déjà en attente"
+                        "dÃ©jÃ  en attente"
                     )
                 )
 
@@ -1710,8 +1743,8 @@ def recommander_specialiste(
                     patient_id,
                     "RECOMMANDATION_SPECIALISTE",
                     (
-                        "Votre médecin principal "
-                        "vous recommande le spécialiste "
+                        "Votre mÃ©decin principal "
+                        "vous recommande le spÃ©cialiste "
                         f"{specialiste[1]}."
                     )
                 )
@@ -1731,7 +1764,7 @@ def recommander_specialiste(
     return {
 
         "message": (
-            "Recommandation du spécialiste créée"
+            "Recommandation du spÃ©cialiste crÃ©Ã©e"
         ),
 
         "recommandation_id": (
@@ -1774,7 +1807,7 @@ def repondre_recommandation_specialiste(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux patients"
+            detail="AccÃ¨s rÃ©servÃ© aux patients"
         )
 
     decision = demande.decision.upper()
@@ -1786,7 +1819,7 @@ def repondre_recommandation_specialiste(
 
         raise HTTPException(
             status_code=400,
-            detail="Décision invalide"
+            detail="DÃ©cision invalide"
         )
 
     patient_id = utilisateur["id"]
@@ -1845,7 +1878,7 @@ def repondre_recommandation_specialiste(
                     status_code=409,
                     detail=(
                         "Cette recommandation "
-                        "a déjà reçu une réponse"
+                        "a dÃ©jÃ  reÃ§u une rÃ©ponse"
                     )
                 )
 
@@ -1928,8 +1961,8 @@ def repondre_recommandation_specialiste(
                         specialiste_id,
                         "RECOMMANDATION_SPECIALISTE_ACCEPTEE",
                         (
-                            "Le patient a accepté "
-                            "la recommandation du spécialiste."
+                            "Le patient a acceptÃ© "
+                            "la recommandation du spÃ©cialiste."
                         )
                     )
                 )
@@ -1944,8 +1977,8 @@ def repondre_recommandation_specialiste(
                 )
 
                 message = (
-                    "Recommandation du spécialiste "
-                    "acceptée"
+                    "Recommandation du spÃ©cialiste "
+                    "acceptÃ©e"
                 )
 
             # ------------------------------------------------
@@ -1983,8 +2016,8 @@ def repondre_recommandation_specialiste(
                         medecin_principal_id,
                         "RECOMMANDATION_SPECIALISTE_REFUSEE",
                         (
-                            "Le patient a refusé "
-                            "la recommandation du spécialiste."
+                            "Le patient a refusÃ© "
+                            "la recommandation du spÃ©cialiste."
                         )
                     )
                 )
@@ -1999,8 +2032,8 @@ def repondre_recommandation_specialiste(
                 )
 
                 message = (
-                    "Recommandation du spécialiste "
-                    "refusée"
+                    "Recommandation du spÃ©cialiste "
+                    "refusÃ©e"
                 )
 
             conn.commit()
@@ -2036,7 +2069,7 @@ def obtenir_medecin_principal(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux patients"
+            detail="AccÃ¨s rÃ©servÃ© aux patients"
         )
 
     with get_connection() as conn:
@@ -2172,8 +2205,8 @@ def consulter_audit(
         raise HTTPException(
             status_code=403,
             detail=(
-                "Accès au journal d'audit "
-                "réservé aux administrateurs"
+                "AccÃ¨s au journal d'audit "
+                "rÃ©servÃ© aux administrateurs"
             )
         )
 
@@ -2290,7 +2323,7 @@ def obtenir_mes_demandes_medecin(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux patients"
+            detail="AccÃ¨s rÃ©servÃ© aux patients"
         )
 
     with get_connection() as conn:
@@ -2360,7 +2393,7 @@ def obtenir_demandes_medecin(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux médecins"
+            detail="AccÃ¨s rÃ©servÃ© aux mÃ©decins"
         )
 
     with get_connection() as conn:
@@ -2428,13 +2461,13 @@ def donner_consentement_route(
     if utilisateur["role"] != "patient":
         raise HTTPException(
             status_code=403,
-            detail="Seul le patient peut gérer son consentement"
+            detail="Seul le patient peut gÃ©rer son consentement"
         )
 
     if utilisateur["id"] != patient_id:
         raise HTTPException(
             status_code=403,
-            detail="Accès non autorisé"
+            detail="AccÃ¨s non autorisÃ©"
         )
 
     from Api.consentement import (
@@ -2465,7 +2498,7 @@ def verifier_consentement_route(
     if utilisateur["id"] != patient_id:
         raise HTTPException(
             status_code=403,
-            detail="Accès non autorisé"
+            detail="AccÃ¨s non autorisÃ©"
         )
 
     consentement = consentement_valide(
@@ -2501,7 +2534,7 @@ def retirer_consentement_route(
     if utilisateur["id"] != patient_id:
         raise HTTPException(
             status_code=403,
-            detail="Accès non autorisé"
+            detail="AccÃ¨s non autorisÃ©"
         )
 
     from Api.consentement import (
@@ -2530,14 +2563,14 @@ def lister_dossiers_patient(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé au patient"
+            detail="AccÃ¨s rÃ©servÃ© au patient"
         )
 
     if utilisateur["id"] != patient_id:
 
         raise HTTPException(
             status_code=403,
-            detail="Accès refusé"
+            detail="AccÃ¨s refusÃ©"
         )
 
     with get_connection() as conn:
@@ -2582,14 +2615,14 @@ def lister_dossiers_medecin(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux médecins"
+            detail="AccÃ¨s rÃ©servÃ© aux mÃ©decins"
         )
 
     if utilisateur["id"] != medecin_id:
 
         raise HTTPException(
             status_code=403,
-            detail="Accès refusé"
+            detail="AccÃ¨s refusÃ©"
         )
 
     verifier_role(
@@ -2658,7 +2691,7 @@ def acces_dossier(
 
             raise HTTPException(
                 status_code=403,
-                detail="Accès refusé"
+                detail="AccÃ¨s refusÃ©"
             )
 
         try:
@@ -2680,7 +2713,7 @@ def acces_dossier(
         return {
 
             "message": (
-                "Accès au dossier autorisé"
+                "AccÃ¨s au dossier autorisÃ©"
             ),
 
             "patient_id": patient_id,
@@ -2702,7 +2735,7 @@ def acces_dossier(
 
             raise HTTPException(
                 status_code=403,
-                detail="Accès refusé"
+                detail="AccÃ¨s refusÃ©"
             )
 
         verifier_role(
@@ -2737,8 +2770,8 @@ def acces_dossier(
             raise HTTPException(
                 status_code=403,
                 detail=(
-                    "Accès refusé : aucune "
-                    "relation médicale active"
+                    "AccÃ¨s refusÃ© : aucune "
+                    "relation mÃ©dicale active"
                 )
             )
 
@@ -2756,7 +2789,7 @@ def acces_dossier(
             raise HTTPException(
                 status_code=403,
                 detail=(
-                    "Accès refusé : consentement "
+                    "AccÃ¨s refusÃ© : consentement "
                     "du patient absent"
                 )
             )
@@ -2799,7 +2832,7 @@ def acces_dossier(
         return {
 
             "message": (
-                "Accès au dossier autorisé"
+                "AccÃ¨s au dossier autorisÃ©"
             ),
 
             "patient_id": patient_id,
@@ -2821,7 +2854,7 @@ def acces_dossier(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès refusé"
+            detail="AccÃ¨s refusÃ©"
         )
 
 
@@ -2849,7 +2882,7 @@ def creer_dossier_route(
 
         raise HTTPException(
             status_code=403,
-            detail="Accès réservé aux médecins"
+            detail="AccÃ¨s rÃ©servÃ© aux mÃ©decins"
         )
 
     verifier_role(
@@ -2886,8 +2919,8 @@ def creer_dossier_route(
         raise HTTPException(
             status_code=403,
             detail=(
-                "Accès refusé : aucune "
-                "relation médicale active"
+                "AccÃ¨s refusÃ© : aucune "
+                "relation mÃ©dicale active"
             )
         )
 

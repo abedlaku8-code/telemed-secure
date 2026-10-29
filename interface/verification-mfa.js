@@ -181,7 +181,7 @@ if (!formulaire || !codeMfa || !message) {
 
             sessionStorage.setItem(
                 "mfa_method",
-                "authenticator"
+                "email"
             );
 
             sessionStorage.removeItem(
