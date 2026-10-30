@@ -1,3 +1,4 @@
+
 import os
 
 import psycopg
@@ -15,10 +16,20 @@ DB_NAME = os.getenv("DB_NAME", "telemed_secure")
 
 
 def get_connection():
-    # En production sur Render, utiliser DATABASE_URL.
-    # En local, utiliser les variables DB_* du fichier .env.
-    if DATABASE_URL and os.getenv("ENVIRONMENT") == "production":
-        return psycopg.connect(DATABASE_URL)
+    if DATABASE_URL:
+        conn = psycopg.connect(DATABASE_URL)
+
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    current_database(),
+                    current_schema(),
+                    current_setting('search_path'),
+                    to_regclass('public.utilisateurs')
+            """)
+            print("DIAGNOSTIC BASE :", cur.fetchone())
+
+        return conn
 
     if not DB_USER:
         raise RuntimeError("DB_USER absente du fichier .env")
