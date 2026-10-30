@@ -27,7 +27,7 @@ formulaire.addEventListener("submit", async function (event) {
     try {
 
         const reponse = await fetch(
-            "http://127.0.0.1:8000/mot-de-passe-oublie",
+            "https://telemed-secure-api-v2.onrender.com/mot-de-passe-oublie",
             {
                 method: "POST",
                 headers: {

@@ -18,7 +18,7 @@ async function consulterDossier() {
 
     try {
         const reponse = await fetch(
-            "http://127.0.0.1:8000/dossiers/1/2/8",
+            "https://telemed-secure-api-v2.onrender.com/dossiers/1/2/8",
             {
                 method: "GET",
                 headers: {

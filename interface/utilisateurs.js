@@ -103,7 +103,7 @@ async function verifierAdministration() {
     try {
 
         const reponse = await fetch(
-            "http://127.0.0.1:8000/admin",
+            "https://telemed-secure-api-v2.onrender.com/admin",
             {
                 method: "GET",
 

@@ -57,7 +57,7 @@ async function chargerJournalAudit() {
     try {
 
         const reponse = await fetch(
-            "http://127.0.0.1:8000/audit",
+            "https://telemed-secure-api-v2.onrender.com/audit",
             {
                 method: "GET",
 

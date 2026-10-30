@@ -54,7 +54,7 @@ if (!formulaire || !codeMfa || !message) {
         try {
 
             const reponse = await fetch(
-                "http://127.0.0.1:8000/mfa/authenticator",
+                "https://telemed-secure-api-v2.onrender.com/mfa/authenticator",
                 {
                     method: "POST",
 
