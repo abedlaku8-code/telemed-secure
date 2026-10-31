@@ -59,7 +59,7 @@ formulaire.addEventListener("submit", async function (event) {
     message.className = "message chargement";
 
     try {
-        const reponse = await fetch("https://telemed-secure-api-v2.onrender.com/utilisateurs", {
+        const reponse = await fetch(`${window.API_URL}/utilisateurs`, {
                 method: "POST",
 
                 headers: {

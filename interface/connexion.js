@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+const API_URL = (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+)
+    ? "http://127.0.0.1:8000"
+    : "https://telemed-secure-api-v2.onrender.com";
 
 const formulaire = document.getElementById("connexion-form");
 const message = document.getElementById("message-connexion");
@@ -51,7 +57,7 @@ formulaire.addEventListener("submit", async function (event) {
     message.className = "message chargement";
 
     try {
-        const reponse = await fetch("https://telemed-secure-api-v2.onrender.com/login", {
+        const reponse = await fetch(`${window.API_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

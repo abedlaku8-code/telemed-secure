@@ -52,10 +52,9 @@ if (!formulaire || !codeMfa || !message) {
         }
 
         try {
-
-            const reponse = await fetch(
-                "https://telemed-secure-api-v2.onrender.com/mfa/authenticator",
-                {
+                const reponse = await fetch(
+                    `${window.API_URL}/mfa/authenticator`,
+                    {
                     method: "POST",
 
                     headers: {

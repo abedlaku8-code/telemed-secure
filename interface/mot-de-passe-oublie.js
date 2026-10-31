@@ -25,10 +25,9 @@ formulaire.addEventListener("submit", async function (event) {
     message.className = "message chargement";
 
     try {
-
-        const reponse = await fetch(
-            "https://telemed-secure-api-v2.onrender.com/mot-de-passe-oublie",
-            {
+            const reponse = await fetch(
+                `${window.API_URL}/mot-de-passe-oublie`,
+                {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -50,13 +49,10 @@ formulaire.addEventListener("submit", async function (event) {
 
         if (donnees.jeton_demo) {
 
-            sessionStorage.setItem(
-                "jeton_reinitialisation",
-                donnees.jeton_demo
-            );
+            const jeton = encodeURIComponent(donnees.jeton_demo);
 
             window.location.href =
-                "nouveau-mot-de-passe.html";
+                `nouveau-mot-de-passe.html?jeton=${jeton}`;
 
             return;
         }
